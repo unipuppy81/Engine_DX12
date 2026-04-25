@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "Game.h"
+#include "DEngine.h"
 
-void Game::Init()
+void Game::Init(const WindowInfo& info)
 {
-	HelloEngine();
+	GDEngine->Init(info);
 }
 
 void Game::Update()
 {
+	GDEngine->Render();
 }

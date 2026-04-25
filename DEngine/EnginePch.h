@@ -43,7 +43,19 @@ using Vec3 = XMFLOAT3;
 using Vec4 = XMFLOAT4;
 using Matrix = XMMATRIX;
 
-void HelloEngine();
+struct WindowInfo
+{
+	HWND	hwnd;		// 출력 윈도우
+	int32	width;
+	int32	height;
+	bool	windowed;	// 창모드
+};
 
+enum
+{
+	SWAP_CHAIN_BUFFER_COUNT = 2
+};
+
+extern unique_ptr<class DEngine> GDEngine;
 
 

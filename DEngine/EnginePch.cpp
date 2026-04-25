@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "EnginePch.h"
+#include "DEngine.h"
 
-void HelloEngine()
-{
-}
+unique_ptr<DEngine> GDEngine = make_unique<DEngine>();
