@@ -43,6 +43,11 @@ using Vec3 = XMFLOAT3;
 using Vec4 = XMFLOAT4;
 using Matrix = XMMATRIX;
 
+enum
+{
+	SWAP_CHAIN_BUFFER_COUNT = 2
+};
+
 struct WindowInfo
 {
 	HWND	hwnd;		// 출력 윈도우
@@ -51,10 +56,16 @@ struct WindowInfo
 	bool	windowed;	// 창모드
 };
 
-enum
+struct Vertex
 {
-	SWAP_CHAIN_BUFFER_COUNT = 2
+	Vec3 pos;
+	Vec4 color;
 };
+
+
+#define DEVICE			GDEngine->GetDevice()->GetDevice()
+#define CMD_LIST		GDEngine->GetCmdQueue()->GetCmdList()
+#define ROOT_SIGNATURE	GDEngine->GetRootSignature()->GetSignature()
 
 extern unique_ptr<class DEngine> GDEngine;
 
