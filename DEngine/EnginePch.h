@@ -62,6 +62,10 @@ struct Vertex
 	Vec4 color;
 };
 
+struct Transform
+{
+	Vec4 offset;
+};
 
 #define DEVICE			GDEngine->GetDevice()->GetDevice()
 #define CMD_LIST		GDEngine->GetCmdQueue()->GetCmdList()

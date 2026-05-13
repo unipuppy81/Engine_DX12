@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CommandQueue.h"
 #include "SwapChain.h"
+#include "DEngine.h"
 
 CommandQueue::~CommandQueue()
 {
@@ -60,7 +61,11 @@ void CommandQueue::RenderBegin(const D3D12_VIEWPORT* vp, const D3D12_RECT* rect)
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		_swapChain->GetBackRTVBuffer().Get(),
 		D3D12_RESOURCE_STATE_PRESENT,			// 현재 출력
-		D3D12_RESOURCE_STATE_RENDER_TARGET);	// 백 버퍼
+		D3D12_RESOURCE_STATE_RENDER_TARGET		// 백 버퍼
+	);	
+
+	_cmdList->SetGraphicsRootSignature(ROOT_SIGNATURE.Get());
+	GDEngine->GetConstantBuffer()->Clear();
 
 	_cmdList->ResourceBarrier(1, &barrier);
 
