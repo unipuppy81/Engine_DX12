@@ -14,12 +14,14 @@ void DEngine::Init(const WindowInfo& info)
 	_swapChain = make_shared<SwapChain>();
 	_rootSignature = make_shared<RootSignature>();
 	_constantBuffer = make_shared<ConstantBuffer>();
+	_tableDescHeap = make_shared<TableDescriptorHeap>();
 		 
 	_device->Init();
 	_cmdQueue->Init(_device->GetDevice(), _swapChain);
 	_swapChain->Init(info, _device->GetDevice(), _device->GetDXGI(), _cmdQueue->GetCmdQueue());
 	_rootSignature->Init(_device->GetDevice());
 	_constantBuffer->Init(sizeof(Transform), 256);
+	_tableDescHeap->Init(256);
 }
 
 void DEngine::Render()

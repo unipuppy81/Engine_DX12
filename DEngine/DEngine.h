@@ -5,6 +5,7 @@
 #include "SwapChain.h"
 #include "RootSignature.h"
 #include "ConstantBuffer.h"
+#include "TableDescriptorHeap.h"
 
 #include "Mesh.h"
 #include "Shader.h"
@@ -21,6 +22,8 @@ public:
 	shared_ptr<SwapChain> GetSwapChain() { return _swapChain; }
 	shared_ptr<RootSignature> GetRootSignature() { return _rootSignature; }
 	shared_ptr<ConstantBuffer> GetConstantBuffer() { return _constantBuffer; }
+	shared_ptr<TableDescriptorHeap> GetTableDescHeap() { return _tableDescHeap; }
+
 public:
 	void RenderBegin();
 	void RenderEnd();
@@ -37,5 +40,6 @@ private:
 	shared_ptr<SwapChain> _swapChain;
 	shared_ptr<RootSignature> _rootSignature;
 	shared_ptr<ConstantBuffer> _constantBuffer;
+	shared_ptr<TableDescriptorHeap> _tableDescHeap;
 };
 

@@ -45,6 +45,9 @@
     <ClCompile Include="ConstantBuffer.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
+    <ClCompile Include="TableDescriptorHeap.cpp">
+      <Filter>DEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -78,6 +81,9 @@
       <Filter>Resource</Filter>
     </ClInclude>
     <ClInclude Include="ConstantBuffer.h">
+      <Filter>DEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="TableDescriptorHeap.h">
       <Filter>DEngine</Filter>
     </ClInclude>
   </ItemGroup>
