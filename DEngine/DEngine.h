@@ -10,6 +10,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "DepthStencilBuffer.h"
 
 class DEngine
 {
@@ -24,7 +25,7 @@ public:
 	shared_ptr<RootSignature> GetRootSignature() { return _rootSignature; }
 	shared_ptr<ConstantBuffer> GetConstantBuffer() { return _constantBuffer; }
 	shared_ptr<TableDescriptorHeap> GetTableDescHeap() { return _tableDescHeap; }
-
+	shared_ptr<DepthStencilBuffer> GetDepthStencilBuffer() { return _depthStencilBuffer; }
 public:
 	void RenderBegin();
 	void RenderEnd();
@@ -42,5 +43,6 @@ private:
 	shared_ptr<RootSignature> _rootSignature;
 	shared_ptr<ConstantBuffer> _constantBuffer;
 	shared_ptr<TableDescriptorHeap> _tableDescHeap;
+	shared_ptr<DepthStencilBuffer> _depthStencilBuffer;
 };
 
