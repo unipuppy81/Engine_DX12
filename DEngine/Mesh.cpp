@@ -21,15 +21,10 @@ void Mesh::Render()
 	{
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = GDEngine->GetConstantBuffer()->PushData(0, &_transform, sizeof(_transform));
 		GDEngine->GetTableDescHeap()->SetCBV(handle, CBV_REGISTER::b0);
+		GDEngine->GetTableDescHeap()->SetSRV(_tex->GetCpuHandle(), SRV_REGISTER::t0);
 	}
-	//{
-	//	D3D12_CPU_DESCRIPTOR_HANDLE handle = GDEngine->GetConstantBuffer()->PushData(1, &_transform, sizeof(_transform));
-	//	GDEngine->GetTableDescHeap()->SetCBV(handle, CBV_REGISTER::b1);
-	//}
 
 	GDEngine->GetTableDescHeap()->CommitTable();
-
-	//CMD_LIST->DrawInstanced(_vertexCount, 1, 0, 0);
 	CMD_LIST->DrawIndexedInstanced(_indexCount, 1, 0,0,0);
 }
 

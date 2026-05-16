@@ -17,20 +17,16 @@ void CommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChain> swapC
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_cmdQueue));
-
-	// D3D12_COMMAND_LIST_TYPE_DIRECT : GPU 가 직접 실행하는 명려여 목록
 	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_cmdAlloc));
-
 	// GPU 하나인 시스템 = 0
 	// 초기 상태 (그리기 명령을 nullptr 로 초기화)
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
 
-	// CommandList 는 Open / Close
-	// Open 상태에서 Command 넣다가 Close 한 다음 제출하는 개념
 	_cmdList->Close();
 
-	// CreateForce
-	// CPU-GPU 동기화 수단
+	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_resCmdAlloc));
+	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&_resCmdList));
+
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 	_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
@@ -99,4 +95,17 @@ void CommandQueue::RenderEnd()
 	WaitSync();
 
 	_swapChain->SwapIndex();
+}
+
+void CommandQueue::FlushResourceCommandQueue()
+{
+	_resCmdList->Close();
+
+	ID3D12CommandList* cmdListArr[] = { _resCmdList.Get() };
+	_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+
+	WaitSync();
+
+	_resCmdAlloc->Reset();
+	_resCmdList->Reset(_resCmdAlloc.Get(), nullptr);
 }

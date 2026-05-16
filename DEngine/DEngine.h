@@ -9,6 +9,7 @@
 
 #include "Mesh.h"
 #include "Shader.h"
+#include "Texture.h"
 
 class DEngine
 {
