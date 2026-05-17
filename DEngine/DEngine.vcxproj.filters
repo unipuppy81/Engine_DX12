@@ -54,6 +54,12 @@
     <ClCompile Include="DepthStencilBuffer.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>DEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>DEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -96,6 +102,12 @@
       <Filter>Resource</Filter>
     </ClInclude>
     <ClInclude Include="DepthStencilBuffer.h">
+      <Filter>DEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>DEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
       <Filter>DEngine</Filter>
     </ClInclude>
   </ItemGroup>

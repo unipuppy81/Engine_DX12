@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Shader.h"
 #include "DEngine.h"
+#include "Input.h"
 
 void Shader::Init(const wstring& path)
 {

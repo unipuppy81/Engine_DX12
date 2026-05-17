@@ -114,6 +114,9 @@ struct Transform
 #define RESOURCE_CMD_LIST	GDEngine->GetCmdQueue()->GetResCmdList()
 #define ROOT_SIGNATURE		GDEngine->GetRootSignature()->GetSignature()
 
+#define INPUT				GDEngine->GetInput()
+#define DELTA_TIME			GDEngine->GetTimer()->GetDeltaTime()
+
 extern unique_ptr<class DEngine> GDEngine;
 
 
