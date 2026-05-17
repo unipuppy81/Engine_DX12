@@ -117,6 +117,8 @@ struct Transform
 #define INPUT				GDEngine->GetInput()
 #define DELTA_TIME			GDEngine->GetTimer()->GetDeltaTime()
 
+#define CONST_BUFFER(type)	GDEngine->GetConstantBuffer(type)
+
 extern unique_ptr<class DEngine> GDEngine;
 
 

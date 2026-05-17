@@ -60,7 +60,8 @@ void CommandQueue::RenderBegin(const D3D12_VIEWPORT* vp, const D3D12_RECT* rect)
 	);	
 
 	_cmdList->SetGraphicsRootSignature(ROOT_SIGNATURE.Get());
-	GDEngine->GetConstantBuffer()->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
 	GDEngine->GetTableDescHeap()->Clear();
 
 	ID3D12DescriptorHeap* descHeap = GDEngine->GetTableDescHeap()->GetDescriptorHeap().Get();

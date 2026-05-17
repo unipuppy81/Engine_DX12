@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Mesh.h"
 #include "DEngine.h"
+#include "Material.h"
 
 void Mesh::Init(const vector<Vertex>& vertexBuffer, const vector<uint32>& indexBuffer)
 {
@@ -18,11 +19,10 @@ void Mesh::Render()
 	// 1) Buffer 에다가 데이터 세팅
 	// 2) TableDescHeap 에다가 CBV 전달
 	// 3) 모든 셋팅잉 끝났으면 TableDescHeap 커밋
-	{
-		D3D12_CPU_DESCRIPTOR_HANDLE handle = GDEngine->GetConstantBuffer()->PushData(0, &_transform, sizeof(_transform));
-		GDEngine->GetTableDescHeap()->SetCBV(handle, CBV_REGISTER::b0);
-		GDEngine->GetTableDescHeap()->SetSRV(_tex->GetCpuHandle(), SRV_REGISTER::t0);
-	}
+
+	CONST_BUFFER(CONSTANT_BUFFER_TYPE::TRANSFORM)->PushData(&_transform, sizeof(_transform));
+
+	_mat->Update();
 
 	GDEngine->GetTableDescHeap()->CommitTable();
 	CMD_LIST->DrawIndexedInstanced(_indexCount, 1, 0,0,0);
