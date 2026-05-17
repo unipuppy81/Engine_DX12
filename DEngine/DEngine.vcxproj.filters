@@ -13,6 +13,9 @@
     <Filter Include="Shader">
       <UniqueIdentifier>{1973432b-90c9-4e6f-95af-d49219bd0888}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameObject">
+      <UniqueIdentifier>{04d0a8c5-7f27-496c-8e42-cc4f8d66441e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -62,6 +65,21 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="Component.cpp">
+      <Filter>GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshRenderer.cpp">
+      <Filter>GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Transform.cpp">
+      <Filter>GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="MonoBehaviour.cpp">
+      <Filter>GameObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +133,21 @@
     </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshRenderer.h">
+      <Filter>GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="MonoBehaviour.h">
+      <Filter>GameObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
