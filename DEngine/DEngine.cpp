@@ -3,6 +3,10 @@
 #include "Material.h"
 #include "Transform.h"
 
+#include "Input.h"
+#include "Timer.h"
+#include "SceneManager.h"
+
 void DEngine::Init(const WindowInfo& info)
 {
 	_window = info;
@@ -16,29 +20,22 @@ void DEngine::Init(const WindowInfo& info)
 	_rootSignature->Init();
 	_tableDescHeap->Init(256);
 	_depthStencilBuffer->Init(_window);
-
-	_input->Init(info.hwnd);
-	_timer->Init();
 	
 	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(TransformMatrix), 256);
 	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(MaterialParams), 256);
 
 	ResizeWindow(_window.width, _window.height);
-}
 
-void DEngine::Render()
-{
-	RenderBegin();
-
-	// 나머지 물체 그리기
-		
-	RenderEnd();
+	GET_SINGLE(Input)->Init(info.hwnd);
+	GET_SINGLE(Timer)->Init();
 }
 
 void DEngine::Update()
 {
-	_input->Update();
-	_timer->Update();
+	GET_SINGLE(Input)->Update();
+	GET_SINGLE(Timer)->Update();
+	
+	Render();
 
 	ShowFps();
 }
@@ -47,6 +44,16 @@ void DEngine::LateUpdate()
 {
 	// TODO
 }
+
+void DEngine::Render()
+{
+	RenderBegin();
+
+	GET_SINGLE(SceneManager)->Update();
+
+	RenderEnd();
+}
+
 
 void DEngine::RenderBegin()
 {
@@ -72,7 +79,7 @@ void DEngine::ResizeWindow(int32 width, int32 height)
 
 void DEngine::ShowFps()
 {
-	uint32 fps = _timer->GetFps();
+	uint32 fps = GET_SINGLE(Timer)->GetFps();
 
 	WCHAR text[100] = L"";
 	::wsprintf(text, L"FPS : %d", fps);

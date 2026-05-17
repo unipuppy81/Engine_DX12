@@ -104,13 +104,26 @@ struct Vertex
 	Vec2 uv;
 };
 
+#define DECLARE_SINGLE(type)		\
+private:							\
+	type() {}						\
+	~type() {}						\
+public:								\
+	static type* GetInstance()		\
+	{								\
+		static type instance;		\
+		return &instance;			\
+	}								\
+
+#define GET_SINGLE(type)	type::GetInstance()
+
 #define DEVICE				GDEngine->GetDevice()->GetDevice()
 #define CMD_LIST			GDEngine->GetCmdQueue()->GetCmdList()
 #define RESOURCE_CMD_LIST	GDEngine->GetCmdQueue()->GetResCmdList()
 #define ROOT_SIGNATURE		GDEngine->GetRootSignature()->GetSignature()
 
-#define INPUT				GDEngine->GetInput()
-#define DELTA_TIME			GDEngine->GetTimer()->GetDeltaTime()
+#define INPUT				GET_SINGLE(Input)
+#define DELTA_TIME			GET_SINGLE(Timer)->GetDeltaTime()
 
 #define CONST_BUFFER(type)	GDEngine->GetConstantBuffer(type)
 
