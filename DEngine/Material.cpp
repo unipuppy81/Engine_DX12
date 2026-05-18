@@ -2,6 +2,16 @@
 #include "Material.h"
 #include "DEngine.h"
 
+Material::Material() : Object(OBJECT_TYPE::MATERIAL)
+{
+
+}
+
+Material::~Material()
+{
+
+}
+
 void Material::PushData()
 {
 	// CBV ¾÷·Îµå

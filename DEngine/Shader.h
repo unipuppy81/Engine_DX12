@@ -1,7 +1,12 @@
 #pragma once
-class Shader
+#include "Object.h"
+
+class Shader : public Object
 {
 public:
+	Shader();
+	virtual ~Shader();
+
 	void Init(const wstring& path);
 	void Update();
 
