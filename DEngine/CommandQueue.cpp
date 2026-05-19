@@ -74,7 +74,7 @@ void CommandQueue::RenderBegin(const D3D12_VIEWPORT* vp, const D3D12_RECT* rect)
 	_cmdList->RSSetScissorRects(1, rect);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = _swapChain->GetBackRTV();
-	_cmdList->ClearRenderTargetView(backBufferView, Colors::LightSteelBlue, 0, nullptr);
+	_cmdList->ClearRenderTargetView(backBufferView, Colors::Black, 0, nullptr);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = GDEngine->GetDepthStencilBuffer()->GetDSVCpuHandle();
 	_cmdList->OMSetRenderTargets(1, &backBufferView, FALSE, &depthStencilView);

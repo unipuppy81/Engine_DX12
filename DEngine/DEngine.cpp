@@ -6,6 +6,7 @@
 #include "Input.h"
 #include "Timer.h"
 #include "SceneManager.h"
+#include "Light.h"
 
 void DEngine::Init(const WindowInfo& info)
 {
@@ -21,8 +22,9 @@ void DEngine::Init(const WindowInfo& info)
 	_tableDescHeap->Init(256);
 	_depthStencilBuffer->Init(_window);
 	
-	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(TransformParams), 256);
-	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(MaterialParams), 256);
+	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
+	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
+	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
 
 	ResizeWindow(_window.width, _window.height);
 
