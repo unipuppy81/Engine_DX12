@@ -160,6 +160,7 @@
     <ClInclude Include="Device.h" />
     <ClInclude Include="DEngine.h" />
     <ClInclude Include="EnginePch.h" />
+    <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Light.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="DEngine.cpp" />
     <ClCompile Include="EnginePch.cpp" />
+    <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Light.cpp" />
