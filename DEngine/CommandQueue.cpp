@@ -52,7 +52,7 @@ void GraphicsCommandQueue::WaitSync()
 }
 
 
-void GraphicsCommandQueue::RenderBegin(const D3D12_VIEWPORT* vp, const D3D12_RECT* rect)
+void GraphicsCommandQueue::RenderBegin()
 {
 	_cmdAlloc->Reset();
 	_cmdList->Reset(_cmdAlloc.Get(), nullptr);
@@ -74,10 +74,6 @@ void GraphicsCommandQueue::RenderBegin(const D3D12_VIEWPORT* vp, const D3D12_REC
 	_cmdList->SetDescriptorHeaps(1, &descHeap); 	// 무거운 연산이므로 프레임당 한 번만 하는게 좋음
 
 	_cmdList->ResourceBarrier(1, &barrier);
-
-	// _cmdList->Reset() 했으니 다시 설정
-	_cmdList->RSSetViewports(1, vp);
-	_cmdList->RSSetScissorRects(1, rect);
 }
 
 void GraphicsCommandQueue::RenderEnd()
