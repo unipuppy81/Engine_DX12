@@ -24,7 +24,7 @@ void Material::PushData()
 			continue;
 
 		SRV_REGISTER reg = SRV_REGISTER(static_cast<int8>(SRV_REGISTER::t0) + i);
-		GDEngine->GetTableDescHeap()->SetSRV(_textures[i]->GetCpuHandle(), reg);
+		GDEngine->GetTableDescHeap()->SetSRV(_textures[i]->GetSRVHandle(), reg);
 	}
 
 	// 파이프라인 세팅

@@ -50,12 +50,30 @@ void Scene::Render()
 {
 	PushLightData();
 
+	// SwapChain Group 초기화
+	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
+	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+
+	// Deferred Group 초기화
+	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->ClearRenderTargetView();
+
+
 	for (auto& gameObject : _gameObjects)
 	{
 		if (gameObject->GetCamera() == nullptr)
 			continue;
 
-		gameObject->GetCamera()->Render();
+		gameObject->GetCamera()->SortGameObject();
+
+		// Deferred OMSet
+		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->OMSetRenderTargets();
+		gameObject->GetCamera()->Render_Deferred();
+
+		// Light OMSet
+
+		// Swapchain OMSet
+		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+		gameObject->GetCamera()->Render_Forward();
 	}
 }
 
