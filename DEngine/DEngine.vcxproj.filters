@@ -117,6 +117,12 @@
     <ClCompile Include="RenderTargetGroup.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
+    <ClCompile Include="StructuredBuffer.cpp">
+      <Filter>DEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Object\Component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -212,6 +218,12 @@
     <ClInclude Include="RenderTargetGroup.h">
       <Filter>DEngine</Filter>
     </ClInclude>
+    <ClInclude Include="StructuredBuffer.h">
+      <Filter>DEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Object\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">
@@ -219,7 +231,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\Resources\Shader\compute.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Resources\Shader\deferred.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
     <FxCompile Include="..\Resources\Shader\forward.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Resources\Shader\lighting.fx">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="..\Resources\Shader\params.fx">
@@ -231,13 +252,7 @@
     <FxCompile Include="..\Resources\Shader\utils.fx">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="..\Resources\Shader\deferred.fx">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Resources\Shader\lighting.fx">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Resources\Shader\compute.fx">
+    <FxCompile Include="..\Resources\Shader\particle.fx">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
