@@ -21,6 +21,7 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetDSV() { return _dsvHeap; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle() { return _srvHeapBegin; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle() { return _uavHeapBegin; }
 
 private:
 	ScratchImage			 		_image;
@@ -29,7 +30,9 @@ private:
 	ComPtr<ID3D12DescriptorHeap>	_srvHeap;
 	ComPtr<ID3D12DescriptorHeap>	_rtvHeap;
 	ComPtr<ID3D12DescriptorHeap>	_dsvHeap;
+	ComPtr<ID3D12DescriptorHeap>	_uavHeap;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE		_srvHeapBegin = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE		_uavHeapBegin = {};
 };
 
