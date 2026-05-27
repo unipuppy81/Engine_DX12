@@ -70,7 +70,7 @@ PS_OUT PS_Main(VS_OUT input)
         color = g_tex_0.Sample(g_sam_0, input.uv);
 
     float3 viewNormal = input.viewNormal;
-    if (g_tex_on_1)
+    if (g_tex_on_1 == 1)
     {
         // [0,255] 범위에서 [0,1]로 변환
         float3 tangentSpaceNormal = g_tex_1.Sample(g_sam_0, input.uv).xyz;

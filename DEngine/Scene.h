@@ -1,6 +1,7 @@
 #pragma once
 
 class GameObject;
+class Camera;
 
 class Scene
 {
@@ -10,6 +11,8 @@ public:
 	void Update();
 	void LateUpdate();
 	void FinalUpdate();
+
+	shared_ptr<class Camera> GetMainCamera();
 
 	void Render();
 
