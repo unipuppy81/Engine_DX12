@@ -5,7 +5,6 @@
 #include "DEngine.h"
 #include "ConstantBuffer.h"
 #include "Light.h"
-#include "DEngine.h"
 #include "Resources.h"
 
 void Scene::Awake()
