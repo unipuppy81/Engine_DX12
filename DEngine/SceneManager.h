@@ -20,6 +20,9 @@ public:
 	const wstring& IndexToLayerName(uint8 index) { return _layerNames[index]; }
 	uint8 LayerNameToIndex(const wstring& name);
 
+	// 임시, 나중에 Physics 같은 싱글턴 클래스로 만드는게 좋음
+	shared_ptr<class GameObject> Pick(int32 screenX, int32 screenY);
+
 public:
 	shared_ptr<Scene> GetActiveScene() { return _activeScene; }
 
