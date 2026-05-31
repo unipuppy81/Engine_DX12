@@ -164,10 +164,12 @@
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="DEngine.h" />
+    <ClInclude Include="DiagnosticsManager.h" />
     <ClInclude Include="EnginePch.h" />
     <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="GpuTimer.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
     <ClInclude Include="ImGuiManager.h" />
@@ -216,10 +218,12 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="DEngine.cpp" />
+    <ClCompile Include="DiagnosticsManager.cpp" />
     <ClCompile Include="EnginePch.cpp" />
     <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="GpuTimer.cpp" />
     <ClCompile Include="imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

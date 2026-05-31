@@ -205,11 +205,11 @@ struct RenderStats
 	float cpuFrameMs = 0.0f;
 	float gpuFrameMs = 0.0f;
 
-	uint32 drawCalls = 0;
-	uint32 triangleCount = 0;
 
-	uint32 visibleObjectCount = 0;
-	uint32 culledObjectCount = 0;
+	// display
+	float displayFps = 0.0f;
+	float displayCpuFrameMs = 0.0f;
+	float displayGpuFrameMs = 0.0f;
 };
 
 extern unique_ptr<class DEngine> GDEngine;

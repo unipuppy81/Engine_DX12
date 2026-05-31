@@ -3,6 +3,7 @@
 #include "DEngine.h"
 #include "TableDescriptorHeap.h"
 #include "Timer.h"
+#include "DiagnosticsManager.h"
 
 void ImGuiManager::Init(HWND hwnd)
 {
@@ -112,7 +113,7 @@ void ImGuiManager::ShowPerformance()
     uint32 fps = GET_SINGLE(Timer)->GetFps();
 
     ImGui::Text("Performance");
-    ImGui::Text("FPS : %d", fps);
-    ImGui::Text("CPU Frame: %.3f ms", RENDER_STATS->cpuFrameMs);
-    ImGui::Text("GPU Frame: %.3f ms", RENDER_STATS->gpuFrameMs);
+    ImGui::Text("FPS :  %.0f", GET_SINGLE(DiagnosticsManager)->GetFps());
+    ImGui::Text("CPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetCpuFrameMs());
+    ImGui::Text("GPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetGpuFrameMs());
 }

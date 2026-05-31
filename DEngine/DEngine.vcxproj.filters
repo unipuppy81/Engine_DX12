@@ -31,6 +31,9 @@
     <Filter Include="Utils\ImGui">
       <UniqueIdentifier>{bc622453-eb61-4b91-ad67-1b36f1b63441}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Diagnostics">
+      <UniqueIdentifier>{8e5b10f3-56dd-445f-ae76-16efd92ddf53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -179,6 +182,12 @@
     </ClCompile>
     <ClCompile Include="ImGuiManager.cpp">
       <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="DiagnosticsManager.cpp">
+      <Filter>Diagnostics</Filter>
+    </ClCompile>
+    <ClCompile Include="GpuTimer.cpp">
+      <Filter>Diagnostics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,6 +343,12 @@
     </ClInclude>
     <ClInclude Include="ImGuiManager.h">
       <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="DiagnosticsManager.h">
+      <Filter>Diagnostics</Filter>
+    </ClInclude>
+    <ClInclude Include="GpuTimer.h">
+      <Filter>Diagnostics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

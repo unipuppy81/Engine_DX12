@@ -9,6 +9,7 @@
 #include "Light.h"
 #include "Resources.h"
 #include "InstancingManager.h"
+#include "DiagnosticsManager.h"
 
 void DEngine::Init(const WindowInfo& info)
 {
@@ -39,19 +40,29 @@ void DEngine::Init(const WindowInfo& info)
 	GET_SINGLE(Resources)->Init();
 
 	// ImGui
+	GET_SINGLE(DiagnosticsManager)->Init();
 	GET_SINGLE(ImGuiManager)->Init(info.hwnd);
 }
 
 void DEngine::Update()
 {
+	auto frameStart = std::chrono::high_resolution_clock::now();
+
+	// *** Engine Loop Begin ***
+
 	GET_SINGLE(Input)->Update();
 	GET_SINGLE(Timer)->Update();
 	GET_SINGLE(SceneManager)->Update();
 	GET_SINGLE(InstancingManager)->ClearBuffer();
 
 	Render();
+	// *** Engine Loop End ***
 
-	// ShowFps();
+	auto frameEnd = std::chrono::high_resolution_clock::now();
+	float cpuMs = std::chrono::duration<float, std::milli>(frameEnd - frameStart).count();
+
+	GET_SINGLE(DiagnosticsManager)->UpdateFrame(cpuMs);
+
 }
 
 void DEngine::LateUpdate()
@@ -64,16 +75,25 @@ void DEngine::Render()
 	RenderBegin();
 
 	GET_SINGLE(SceneManager)->Render();
+
+	GET_SINGLE(ImGuiManager)->BeginFrame();
 	GET_SINGLE(ImGuiManager)->Render();
 
+	GET_SINGLE(DiagnosticsManager)->EndGpuTimer();
+	GET_SINGLE(DiagnosticsManager)->ResolveGpuTimer();
+
 	RenderEnd();
+
+	GET_SINGLE(DiagnosticsManager)->UpdateGpuResult();
 }
 
 
 void DEngine::RenderBegin()
 {
 	_graphicsCmdQueue->RenderBegin();
-	GET_SINGLE(ImGuiManager)->BeginFrame();
+
+	GET_SINGLE(DiagnosticsManager)->BeginGpuTimer();
+
 }
 
 void DEngine::RenderEnd()
