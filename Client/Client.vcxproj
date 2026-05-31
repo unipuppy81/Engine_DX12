@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Library\Include\;$(SolutionDir)DEngine\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Library\Include\FBX;$(SolutionDir)Library\Include\;$(SolutionDir)DEngine\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Library\Lib\;$(SolutionDir)Build;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Build\</OutDir>
   </PropertyGroup>
