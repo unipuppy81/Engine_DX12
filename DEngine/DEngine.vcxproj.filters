@@ -28,6 +28,9 @@
     <Filter Include="Object\Component\Collider">
       <UniqueIdentifier>{d058475d-baf8-40d5-92b9-8e69813a156d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils\ImGui">
+      <UniqueIdentifier>{bc622453-eb61-4b91-ad67-1b36f1b63441}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -152,6 +155,27 @@
     </ClCompile>
     <ClCompile Include="TestDragon.cpp">
       <Filter>Object\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_demo.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_draw.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_tables.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_widgets.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_dx12.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_win32.cpp">
+      <Filter>Utils\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +304,30 @@
     </ClInclude>
     <ClInclude Include="TestDragon.h">
       <Filter>Object\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="imconfig.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_rectpack.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_textedit.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_truetype.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_win32.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_dx12.h">
+      <Filter>Utils\ImGui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -35,6 +35,12 @@ using namespace Microsoft::WRL;
 
 #include "FBX/fbxsdk.h"
 
+// ImGUI
+#include "imgui.h"
+#include "imgui_impl_dx12.h"
+#include "imgui_impl_win32.h"
+
+
 // lib
 #pragma comment(lib, "d3d12")
 #pragma comment(lib, "dxgi")
