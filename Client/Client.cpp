@@ -5,6 +5,8 @@
 #include "framework.h"
 #include "Client.h"
 #include "Game.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
 
 #define MAX_LOADSTRING 100
 
@@ -30,6 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: 여기에 코드를 입력합니다.
+    ImGui_ImplWin32_EnableDpiAwareness();
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -75,6 +78,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
+    HWND hWnd,
+    UINT msg,
+    WPARAM wParam,
+    LPARAM lParam
+);
 
 
 //
@@ -145,6 +155,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    if (ImGui::GetCurrentContext() != nullptr)
+    {
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+            return true;
+    }
+
     switch (message)
     {
     case WM_COMMAND:

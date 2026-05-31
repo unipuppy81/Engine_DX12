@@ -177,6 +177,9 @@
     <ClCompile Include="imgui_impl_win32.cpp">
       <Filter>Utils\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="ImGuiManager.cpp">
+      <Filter>Utils\ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -327,6 +330,9 @@
       <Filter>Utils\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="imgui_impl_dx12.h">
+      <Filter>Utils\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGuiManager.h">
       <Filter>Utils\ImGui</Filter>
     </ClInclude>
   </ItemGroup>

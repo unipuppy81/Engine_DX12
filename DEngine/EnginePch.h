@@ -166,12 +166,15 @@ public:								\
 #define GET_SINGLE(type)	type::GetInstance()
 
 #define DEVICE				GDEngine->GetDevice()->GetDevice()
+#define GRAPHICS_CMD_QUEUE	GDEngine->GetGraphicsCmdQueue()
 #define GRAPHICS_CMD_LIST	GDEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
 #define RESOURCE_CMD_LIST	GDEngine->GetGraphicsCmdQueue()->GetResCmdList()
 #define COMPUTE_CMD_LIST	GDEngine->GetComputeCmdQueue()->GetComputeCmdList()
 
 #define GRAPHICS_ROOT_SIGNATURE		GDEngine->GetRootSignature()->GetGraphicsRootSignature()
 #define COMPUTE_ROOT_SIGNATURE		GDEngine->GetRootSignature()->GetComputeRootSignature()
+
+#define RENDER_STATS		GDEngine->GetRenderStats()
 
 #define INPUT				GET_SINGLE(Input)
 #define DELTA_TIME			GET_SINGLE(Timer)->GetDeltaTime()
@@ -193,6 +196,20 @@ struct AnimFrameParams
 	Vec4	scale;
 	Vec4	rotation; // Quaternion
 	Vec4	translation;
+};
+
+// Debug UI Data
+struct RenderStats
+{
+	float fps = 0.0f;
+	float cpuFrameMs = 0.0f;
+	float gpuFrameMs = 0.0f;
+
+	uint32 drawCalls = 0;
+	uint32 triangleCount = 0;
+
+	uint32 visibleObjectCount = 0;
+	uint32 culledObjectCount = 0;
 };
 
 extern unique_ptr<class DEngine> GDEngine;

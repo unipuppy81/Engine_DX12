@@ -37,6 +37,9 @@ void DEngine::Init(const WindowInfo& info)
 	GET_SINGLE(Input)->Init(info.hwnd);
 	GET_SINGLE(Timer)->Init();
 	GET_SINGLE(Resources)->Init();
+
+	// ImGui
+	GET_SINGLE(ImGuiManager)->Init(info.hwnd);
 }
 
 void DEngine::Update()
@@ -48,7 +51,7 @@ void DEngine::Update()
 
 	Render();
 
-	ShowFps();
+	// ShowFps();
 }
 
 void DEngine::LateUpdate()
@@ -61,6 +64,7 @@ void DEngine::Render()
 	RenderBegin();
 
 	GET_SINGLE(SceneManager)->Render();
+	GET_SINGLE(ImGuiManager)->Render();
 
 	RenderEnd();
 }
@@ -69,6 +73,7 @@ void DEngine::Render()
 void DEngine::RenderBegin()
 {
 	_graphicsCmdQueue->RenderBegin();
+	GET_SINGLE(ImGuiManager)->BeginFrame();
 }
 
 void DEngine::RenderEnd()

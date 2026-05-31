@@ -203,45 +203,45 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 #pragma endregion
 
 #pragma region Object
-	//{
-	//	shared_ptr<GameObject> obj = make_shared<GameObject>();
-	//	obj->SetName(L"OBJ");
-	//	obj->AddComponent(make_shared<Transform>());
-	//	obj->AddComponent(make_shared<SphereCollider>());
-	//	obj->GetTransform()->SetLocalScale(Vec3(100.f, 100.f, 100.f));
-	//	obj->GetTransform()->SetLocalPosition(Vec3(0, 0.f, 500.f));
-	//	obj->SetStatic(false);
-	//	shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
-	//	{
-	//		shared_ptr<Mesh> sphereMesh = GET_SINGLE(Resources)->LoadSphereMesh();
-	//		meshRenderer->SetMesh(sphereMesh);
-	//	}
-	//	{
-	//		shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
-	//		meshRenderer->SetMaterial(material->Clone());
-	//	}
-	//	dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetRadius(0.5f);
-	//	dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetCenter(Vec3(0.f, 0.f, 0.f));
-	//	obj->AddComponent(meshRenderer);
-	//	scene->AddGameObject(obj);
-	//}
+	{
+		shared_ptr<GameObject> obj = make_shared<GameObject>();
+		obj->SetName(L"OBJ");
+		obj->AddComponent(make_shared<Transform>());
+		obj->AddComponent(make_shared<SphereCollider>());
+		obj->GetTransform()->SetLocalScale(Vec3(100.f, 100.f, 100.f));
+		obj->GetTransform()->SetLocalPosition(Vec3(0, 0.f, 500.f));
+		obj->SetStatic(false);
+		shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
+		{
+			shared_ptr<Mesh> sphereMesh = GET_SINGLE(Resources)->LoadSphereMesh();
+			meshRenderer->SetMesh(sphereMesh);
+		}
+		{
+			shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
+			meshRenderer->SetMaterial(material->Clone());
+		}
+		dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetRadius(0.5f);
+		dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetCenter(Vec3(0.f, 0.f, 0.f));
+		obj->AddComponent(meshRenderer);
+		scene->AddGameObject(obj);
+	}
 #pragma endregion
 
 #pragma region Terrain
-	//{
-	//	shared_ptr<GameObject> obj = make_shared<GameObject>();
-	//	obj->AddComponent(make_shared<Transform>());
-	//	obj->AddComponent(make_shared<Terrain>());
-	//	obj->AddComponent(make_shared<MeshRenderer>());
+	{
+		shared_ptr<GameObject> obj = make_shared<GameObject>();
+		obj->AddComponent(make_shared<Transform>());
+		obj->AddComponent(make_shared<Terrain>());
+		obj->AddComponent(make_shared<MeshRenderer>());
 
-	//	obj->GetTransform()->SetLocalScale(Vec3(50.f, 250.f, 50.f));
-	//	obj->GetTransform()->SetLocalPosition(Vec3(-100.f, -200.f, 300.f));
-	//	obj->SetStatic(true);
-	//	obj->GetTerrain()->Init(64, 64);
-	//	obj->SetCheckFrustum(false);
+		obj->GetTransform()->SetLocalScale(Vec3(50.f, 250.f, 50.f));
+		obj->GetTransform()->SetLocalPosition(Vec3(-100.f, -200.f, 300.f));
+		obj->SetStatic(true);
+		obj->GetTerrain()->Init(64, 64);
+		obj->SetCheckFrustum(false);
 
-	//	scene->AddGameObject(obj);
-	//}
+		scene->AddGameObject(obj);
+	}
 #pragma endregion
 
 #pragma region UI_Test
@@ -296,19 +296,19 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 #pragma region FBX
 	{
-		shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
-
-		vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
-
-		for (auto& gameObject : gameObjects)
-		{
-			gameObject->SetName(L"Dragon");
-			gameObject->SetCheckFrustum(false);
-			gameObject->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 300.f));
-			gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1.f, 1.f));
-			scene->AddGameObject(gameObject);
-			gameObject->AddComponent(make_shared<TestDragon>());
-		}
+		//shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
+		//
+		//vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
+		//
+		//for (auto& gameObject : gameObjects)
+		//{
+		//	gameObject->SetName(L"Dragon");
+		//	gameObject->SetCheckFrustum(false);
+		//	gameObject->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 300.f));
+		//	gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1.f, 1.f));
+		//	scene->AddGameObject(gameObject);
+		//	gameObject->AddComponent(make_shared<TestDragon>());
+		//}
 	}
 #pragma endregion
 
