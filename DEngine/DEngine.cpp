@@ -46,6 +46,8 @@ void DEngine::Init(const WindowInfo& info)
 
 void DEngine::Update()
 {
+	GET_SINGLE(DiagnosticsManager)->Reset();
+
 	auto frameStart = std::chrono::high_resolution_clock::now();
 
 	// *** Engine Loop Begin ***
@@ -62,7 +64,6 @@ void DEngine::Update()
 	float cpuMs = std::chrono::duration<float, std::milli>(frameEnd - frameStart).count();
 
 	GET_SINGLE(DiagnosticsManager)->UpdateFrame(cpuMs);
-
 }
 
 void DEngine::LateUpdate()

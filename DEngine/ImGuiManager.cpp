@@ -116,4 +116,6 @@ void ImGuiManager::ShowPerformance()
     ImGui::Text("FPS :  %.0f", GET_SINGLE(DiagnosticsManager)->GetFps());
     ImGui::Text("CPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetCpuFrameMs());
     ImGui::Text("GPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetGpuFrameMs());
+    ImGui::Text("DrawCall Count: %d", GET_SINGLE(DiagnosticsManager)->GetDrawCallCount());
+    ImGui::Text("Triangle Count: %d", GET_SINGLE(DiagnosticsManager)->GetTriangleCount());
 }

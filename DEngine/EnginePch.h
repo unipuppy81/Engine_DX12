@@ -198,23 +198,8 @@ struct AnimFrameParams
 	Vec4	translation;
 };
 
-// Debug UI Data
-struct RenderStats
-{
-	float fps = 0.0f;
-	float cpuFrameMs = 0.0f;
-	float gpuFrameMs = 0.0f;
-
-
-	// display
-	float displayFps = 0.0f;
-	float displayCpuFrameMs = 0.0f;
-	float displayGpuFrameMs = 0.0f;
-};
-
 extern unique_ptr<class DEngine> GDEngine;
 
 // Utils
 wstring s2ws(const string& s);
 string ws2s(const wstring& s);
-

@@ -8,15 +8,18 @@ void DiagnosticsManager::UpdateFrame(float cpuMs)
 	float deltaTime = GET_SINGLE(Timer)->GetDeltaTime();
 
 	_cpuFrameMs = cpuMs;
-	_fps = static_cast<float>(fps);
+	_fps = fps;
+
 
 	_displayElapsed += deltaTime;
 
 	if (_displayElapsed >= _displayInterval)
 	{
-		_displayfps = _fps;
+		_displayfps = fps;
 		_displayCpuFrameMs = _cpuFrameMs;
 		_displayGpuFrameMs = _gpuFrameMs;
+		_displayDrawCallCount = _drawCallCount;
+		_displayTriangleCount = _triangleCount;
 
 		_displayElapsed = 0.0f;
 	}
@@ -25,6 +28,15 @@ void DiagnosticsManager::UpdateFrame(float cpuMs)
 void DiagnosticsManager::Init()
 {
 	_gpuTimer->Init();
+}
+
+void DiagnosticsManager::Reset()
+{
+	_drawCallCount = 0;
+	_triangleCount = 0;
+	_totalObjectCount = 0;
+	_visibleObjectCount = 0;
+	_culledObjectCount = 0;
 }
 
 void DiagnosticsManager::BeginGpuTimer()
@@ -46,4 +58,10 @@ void DiagnosticsManager::UpdateGpuResult()
 {
 	_gpuTimer->UpdateResult();
 	_gpuFrameMs = _gpuTimer->GetGpuMs();
+}
+
+void DiagnosticsManager::AddDrawCallData(uint32 triangleCount)
+{
+	_drawCallCount++;
+	_triangleCount += triangleCount;
 }
