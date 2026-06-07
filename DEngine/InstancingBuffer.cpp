@@ -40,6 +40,10 @@ void InstancingBuffer::AddData(InstancingParams& params)
 void InstancingBuffer::PushData()
 {
 	const uint32 dataCount = GetCount();
+
+	if (dataCount == 0)
+		return;
+
 	if (dataCount > _maxCount)
 		Init(dataCount);
 

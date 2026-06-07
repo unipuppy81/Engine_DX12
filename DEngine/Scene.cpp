@@ -62,13 +62,9 @@ void Scene::Render()
 	ClearRTV();
 
 	RenderShadow();
-
 	RenderDeferred();
-
 	RenderLights();
-
 	RenderFinal();
-
 	RenderForward();
 }
 
@@ -142,7 +138,6 @@ void Scene::RenderFinal()
 void Scene::RenderForward()
 {
 	shared_ptr<Camera> mainCamera = _cameras[0];
-	mainCamera->Render_Forward();
 
 	for (auto& camera : _cameras)
 	{
@@ -152,6 +147,8 @@ void Scene::RenderForward()
 		camera->SortGameObject();
 		camera->Render_Forward();
 	}
+
+	mainCamera->Render_Forward();
 }
 
 void Scene::PushLightData()

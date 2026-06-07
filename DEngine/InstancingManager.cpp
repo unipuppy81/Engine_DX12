@@ -18,7 +18,12 @@ void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 
 	for (auto& pair : cache)
 	{
+		const uint64 instanceId = pair.first;
 		const vector<shared_ptr<GameObject>>& vec = pair.second;
+
+		{
+			// DX_LOG(L"[INSTANCING] InstanceID: " << instanceId << L", Group Count: " << vec.size());
+		}
 
 		if (vec.size() == 1)
 		{
@@ -26,8 +31,6 @@ void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 		}
 		else
 		{
-			const uint64 instanceId = pair.first;
-
 			for (const shared_ptr<GameObject>& gameObject : vec)
 			{
 				InstancingParams params;
@@ -39,6 +42,7 @@ void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 			}
 
 			shared_ptr<InstancingBuffer>& buffer = _buffers[instanceId];
+
 			vec[0]->GetMeshRenderer()->Render(buffer);
 		}
 	}

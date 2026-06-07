@@ -11,6 +11,8 @@
 #include "ParticleSystem.h"
 #include "InstancingManager.h"
 
+#include <iostream>
+
 Matrix Camera::S_MatView;
 Matrix Camera::S_MatProjection;
 
@@ -47,6 +49,10 @@ void Camera::SortGameObject()
 	_vecDeferred.clear();
 	_vecParticle.clear();
 
+	uint32 total = 0;
+	uint32 frustumCulled = 0;
+	uint32 layerCulled = 0;
+
 	for (auto& gameObject : gameObjects)
 	{
 		if (gameObject->GetMeshRenderer() == nullptr && gameObject->GetParticleSystem() == nullptr)
@@ -68,7 +74,6 @@ void Camera::SortGameObject()
 
 		if (gameObject->GetMeshRenderer())
 		{
-
 			SHADER_TYPE shaderType = gameObject->GetMeshRenderer()->GetMaterial()->GetShader()->GetShaderType();
 			switch (shaderType)
 			{
@@ -84,7 +89,6 @@ void Camera::SortGameObject()
 		{
 			_vecParticle.push_back(gameObject);
 		}
-
 	}
 }
 
@@ -132,6 +136,8 @@ void Camera::Render_Forward()
 {
 	S_MatView = _matView;
 	S_MatProjection = _matProjection;
+
+	DX_LOG(L"[CULLING] Deferred Visible Count: " << _vecForward.size());
 
 	GET_SINGLE(InstancingManager)->Render(_vecForward);
 

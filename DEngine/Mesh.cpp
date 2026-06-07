@@ -41,6 +41,7 @@ void Mesh::Render(shared_ptr<InstancingBuffer>& buffer, uint32 idx)
 {
 	D3D12_VERTEX_BUFFER_VIEW bufferViews[] = { _vertexBufferView, buffer->GetBufferView() };
 	GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 2, bufferViews);
+	GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 2, bufferViews);
 	GRAPHICS_CMD_LIST->IASetIndexBuffer(&_vecIndexInfo[idx].bufferView);
 
 	GDEngine->GetGraphicsDescHeap()->CommitTable();

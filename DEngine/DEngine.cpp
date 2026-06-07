@@ -58,6 +58,7 @@ void DEngine::Update()
 	GET_SINGLE(InstancingManager)->ClearBuffer();
 
 	Render();
+
 	// *** Engine Loop End ***
 
 	auto frameEnd = std::chrono::high_resolution_clock::now();

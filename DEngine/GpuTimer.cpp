@@ -88,9 +88,9 @@ void GpuTimer::UpdateResult()
 	_readbackBuffer->Unmap(0, nullptr);
 
 	WCHAR text[256];
-	swprintf_s(text, L"GPU Timestamp start=%llu end=%llu freq=%llu\n",
-		start, end, _timestampFrequency);
-	OutputDebugString(text);
+	// [Log] GPU
+	//swprintf_s(text, L"GPU Timestamp start=%llu end=%llu freq=%llu\n", start, end, _timestampFrequency);
+	//::OutputDebugString(text);
 
 	if (end > start && _timestampFrequency > 0)
 	{

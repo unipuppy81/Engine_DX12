@@ -12,6 +12,7 @@
 #include <array>
 #include <list>
 #include <map>
+#include <sstream>
 using namespace std;
 
 #include <filesystem>
@@ -203,3 +204,12 @@ extern unique_ptr<class DEngine> GDEngine;
 // Utils
 wstring s2ws(const string& s);
 string ws2s(const wstring& s);
+
+
+// Debug Output Log
+#define DX_LOG(x)                                      \
+{                                                      \
+    std::wstringstream ss;                             \
+    ss << x;                                           \
+    ::OutputDebugStringW((ss.str() + L"\n").c_str());  \
+}
