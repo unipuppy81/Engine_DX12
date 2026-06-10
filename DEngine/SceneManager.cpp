@@ -202,14 +202,13 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 #pragma region Object
 	{
-		for (int i = 0; i < 10; i++)
 		{
 			shared_ptr<GameObject> obj = make_shared<GameObject>();
-			obj->SetName(L"OBJ");
+			obj->SetName(L"OBJ_TYPE_A");
 			obj->AddComponent(make_shared<Transform>());
 			obj->AddComponent(make_shared<SphereCollider>());
-			obj->GetTransform()->SetLocalScale(Vec3(30, 30.f, 30.f));
-			obj->GetTransform()->SetLocalPosition(Vec3((i - 5) * 50.0f, 0.f, 300.f));
+			obj->GetTransform()->SetLocalScale(Vec3(30.f, 30.f, 30.f));
+			obj->GetTransform()->SetLocalPosition(Vec3(-25.0f, 0.f, 300.f));
 			obj->SetStatic(false);
 			shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
 			{
@@ -226,6 +225,28 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			scene->AddGameObject(obj);
 		}
 
+		{
+			shared_ptr<GameObject> obj = make_shared<GameObject>();
+			obj->SetName(L"OBJ_TYPE_B");
+			obj->AddComponent(make_shared<Transform>());
+			obj->AddComponent(make_shared<SphereCollider>());
+			obj->GetTransform()->SetLocalScale(Vec3(20.f, 20.f, 20.f));
+			obj->GetTransform()->SetLocalPosition(Vec3(25.0f, 0.f, 300.f));
+			obj->SetStatic(false);
+			shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
+			{
+				shared_ptr<Mesh> sphereMesh = GET_SINGLE(Resources)->LoadSphereMesh();
+				meshRenderer->SetMesh(sphereMesh);
+			}
+			{
+				shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
+				meshRenderer->SetMaterial(material->Clone());
+			}
+			dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetRadius(0.5f);
+			dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetCenter(Vec3(0.f, 0.f, 0.f));
+			obj->AddComponent(meshRenderer);
+			scene->AddGameObject(obj);
+		}
 	}
 #pragma endregion
 

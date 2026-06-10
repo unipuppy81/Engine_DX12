@@ -137,7 +137,7 @@ void Camera::Render_Forward()
 	S_MatView = _matView;
 	S_MatProjection = _matProjection;
 
-	DX_LOG(L"[CULLING] Deferred Visible Count: " << _vecForward.size());
+	// DX_LOG(L"[CULLING] Deferred Visible Count: " << _vecForward.size());
 
 	GET_SINGLE(InstancingManager)->Render(_vecForward);
 

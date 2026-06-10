@@ -142,13 +142,14 @@ void Scene::RenderForward()
 	for (auto& camera : _cameras)
 	{
 		if (camera == mainCamera)
+		{
+			mainCamera->Render_Forward();
 			continue;
-
+		}
+		
 		camera->SortGameObject();
 		camera->Render_Forward();
 	}
-
-	mainCamera->Render_Forward();
 }
 
 void Scene::PushLightData()
