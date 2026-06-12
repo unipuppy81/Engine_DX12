@@ -72,6 +72,7 @@ void Shader::CreateGraphicsShader(const wstring& path, ShaderInfo info, ShaderAr
 		_graphicsPipelineDesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT; // POSITION
 		_graphicsPipelineDesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT; // NORMAL
 		_graphicsPipelineDesc.RTVFormats[2] = DXGI_FORMAT_R8G8B8A8_UNORM; // COLOR
+		_graphicsPipelineDesc.RTVFormats[3] = DXGI_FORMAT_R8G8B8A8_UNORM; // MaterialInfo
 		break;
 	case SHADER_TYPE::FORWARD:
 		_graphicsPipelineDesc.NumRenderTargets = 1;
@@ -208,10 +209,36 @@ void Shader::CreateShader(const wstring& path, const string& name, const string&
 	compileFlag = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-	if (FAILED(::D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE
-		, name.c_str(), version.c_str(), compileFlag, 0, &blob, &_errBlob)))
+	HRESULT hr = ::D3DCompileFromFile(
+		path.c_str(),
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		name.c_str(),
+		version.c_str(),
+		compileFlag,
+		0,
+		&blob,
+		&_errBlob
+	);
+
+	if (FAILED(hr))
 	{
-		::MessageBoxA(nullptr, "Shader Create Failed !", nullptr, MB_OK);
+		if (_errBlob)
+		{
+			::MessageBoxA(
+				nullptr,
+				reinterpret_cast<const char*>(_errBlob->GetBufferPointer()),
+				"Shader Compile Error",
+				MB_OK
+			);
+		}
+		else
+		{
+			::MessageBoxA(nullptr, "Shader Create Failed: unknown error", "Shader Compile Error", MB_OK);
+		}
+
+		assert(false);
+		return;
 	}
 
 	shaderByteCode = { blob->GetBufferPointer(), blob->GetBufferSize() };

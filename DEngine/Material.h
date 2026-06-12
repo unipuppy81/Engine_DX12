@@ -26,6 +26,16 @@ struct MaterialParams
 	array<Matrix, MATERIAL_ARG_COUNT> matrixParams;
 };
 
+struct PBRMaterialParams
+{
+	Vec4 baseColor = Vec4(1.f, 1.f, 1.f, 1.f);
+
+	float metallic = 0.f;
+	float roughness = 0.5f;
+	float ao = 1.f;
+	float padding = 0.f;
+};
+
 class Material : public Object
 {
 public:
@@ -47,6 +57,12 @@ public:
 	void SetVec4(uint8 index, Vec4 value) { _params.SetVec4(index, value); }
 	void SetMatrix(uint8 index, Matrix& value) { _params.SetMatrix(index, value); }
 
+	// PBR
+	void SetPBRBaseColor(const Vec4& color) { _pbrParams.baseColor = color; }
+	void SetPBRMetallic(float value) { _pbrParams.metallic = value; }
+	void SetPBRRoughness(float value) { _pbrParams.roughness = value; }
+	void SetPBRAO(float value) { _pbrParams.ao = value; }
+
 	void PushGraphicsData();
 	void PushComputeData();
 	void Dispatch(uint32 x, uint32 y, uint32 z);
@@ -56,6 +72,8 @@ public:
 private:
 	shared_ptr<Shader>	_shader;
 	MaterialParams		_params;
+	PBRMaterialParams	_pbrParams;
+
 	array<shared_ptr<Texture>, MATERIAL_ARG_COUNT> _textures;
 
 };

@@ -15,7 +15,10 @@ Material::~Material()
 void Material::PushGraphicsData()
 {
 	// CBV 업로드
+	// 기존 MaterialParams -> b2
 	CONST_BUFFER(CONSTANT_BUFFER_TYPE::MATERIAL)->PushGraphicsData(&_params, sizeof(_params));
+	// PBRMaterialParams -> b3
+	CONST_BUFFER(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->PushGraphicsData(&_pbrParams, sizeof(_pbrParams));
 
 	// SRV 업로드
 	for (size_t i = 0; i < _textures.size(); i++)
@@ -70,6 +73,7 @@ shared_ptr<Material> Material::Clone()
 
 	material->SetShader(_shader);
 	material->_params = _params;
+	material->_pbrParams = _pbrParams;
 	material->_textures = _textures;
 
 	return material;

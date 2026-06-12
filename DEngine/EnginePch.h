@@ -145,12 +145,12 @@ struct Vertex
 	{
 	}
 
-	Vec3 pos;
-	Vec2 uv;
-	Vec3 normal;
-	Vec3 tangent;
-	Vec4 weights;
-	Vec4 indices;
+	Vec3 pos;      // offset 0,  size 12
+	Vec2 uv;       // offset 12, size 8
+	Vec3 normal;   // offset 20, size 12
+	Vec3 tangent;  // offset 32, size 12
+	Vec4 weights;  // offset 44, size 16
+	Vec4 indices;  // offset 60, size 16
 };
 
 #define DECLARE_SINGLE(type)		\

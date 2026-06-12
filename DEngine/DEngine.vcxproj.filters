@@ -396,5 +396,8 @@
     <FxCompile Include="..\Resources\Shader\animation.fx">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\Resources\Shader\pbr.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -41,6 +41,7 @@ public:
 
 	virtual void FinalUpdate() override;
 	void Render();
+	void RenderPBR();
 	void RenderShadow();
 
 public:
@@ -65,7 +66,8 @@ private:
 
 	int8 _lightIndex = -1;
 	shared_ptr<class Mesh> _volumeMesh;
-	shared_ptr<class Material> _lightMaterial;
+	shared_ptr<class Material> _lightMaterial;		// Phong Light
+	shared_ptr<class Material> _pbrLightMaterial;	// PBR Light
 
 	shared_ptr<GameObject> _shadowCamera;
 };

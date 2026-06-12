@@ -57,6 +57,35 @@ void Light::Render()
 	_volumeMesh->Render();
 }
 
+void Light::RenderPBR()
+{
+	assert(_lightIndex >= 0);
+
+	if (_pbrLightMaterial == nullptr)
+		return;
+
+	GetTransform()->PushData();
+
+	if (static_cast<LIGHT_TYPE>(_lightInfo.lightType) == LIGHT_TYPE::DIRECTIONAL_LIGHT)
+	{
+		shared_ptr<Texture> shadowTex = GET_SINGLE(Resources)->Get<Texture>(L"ShadowTarget");
+		_pbrLightMaterial->SetTexture(2, shadowTex);
+
+		Matrix matVP = _shadowCamera->GetCamera()->GetViewMatrix() * _shadowCamera->GetCamera()->GetProjectionMatrix();
+		_pbrLightMaterial->SetMatrix(0, matVP);
+	}
+	else
+	{
+		float scale = 2 * _lightInfo.range;
+		GetTransform()->SetLocalScale(Vec3(scale, scale, scale));
+	}
+
+	_pbrLightMaterial->SetInt(0, _lightIndex);
+	_pbrLightMaterial->PushGraphicsData();
+
+	_volumeMesh->Render();
+}
+
 void Light::RenderShadow()
 {
 	_shadowCamera->GetCamera()->SortShadowObject();
@@ -81,6 +110,7 @@ void Light::SetLightType(LIGHT_TYPE type)
 	case LIGHT_TYPE::DIRECTIONAL_LIGHT:
 		_volumeMesh = GET_SINGLE(Resources)->Get<Mesh>(L"Rectangle");
 		_lightMaterial = GET_SINGLE(Resources)->Get<Material>(L"DirLight");
+		_pbrLightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_DirLight");
 
 		_shadowCamera->GetCamera()->SetScale(1.f);
 		_shadowCamera->GetCamera()->SetFar(10000.f);
@@ -89,11 +119,15 @@ void Light::SetLightType(LIGHT_TYPE type)
 		break;
 	case LIGHT_TYPE::POINT_LIGHT:
 		_volumeMesh = GET_SINGLE(Resources)->Get<Mesh>(L"Sphere");
+
 		_lightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PointLight");
+		_pbrLightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_PointLight");
 		break;
 	case LIGHT_TYPE::SPOT_LIGHT:
 		_volumeMesh = GET_SINGLE(Resources)->Get<Mesh>(L"Sphere");
+
 		_lightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PointLight");
+		_pbrLightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_PointLight");
 		break;
 	}
 }

@@ -293,6 +293,7 @@
     <FxCompile Include="..\Resources\Shader\math.fx" />
     <FxCompile Include="..\Resources\Shader\params.fx" />
     <FxCompile Include="..\Resources\Shader\particle.fx" />
+    <FxCompile Include="..\Resources\Shader\pbr.fx" />
     <FxCompile Include="..\Resources\Shader\shadow.fx" />
     <FxCompile Include="..\Resources\Shader\skybox.fx" />
     <FxCompile Include="..\Resources\Shader\terrain.fx" />

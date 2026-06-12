@@ -30,6 +30,8 @@ void DEngine::Init(const WindowInfo& info)
 	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
 	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
+	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 256);
+
 
 	CreateRenderTargetGroups();
 
@@ -192,6 +194,12 @@ void DEngine::CreateRenderTargetGroups()
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 		rtVec[2].target = GET_SINGLE(Resources)->CreateTexture(L"DiffuseTarget",
+			DXGI_FORMAT_R8G8B8A8_UNORM, _window.width, _window.height,
+			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+		// Phong/PBR ±¸ºÐ + PBR material data
+		rtVec[3].target = GET_SINGLE(Resources)->CreateTexture(L"MaterialInfoTarget",
 			DXGI_FORMAT_R8G8B8A8_UNORM, _window.width, _window.height,
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);

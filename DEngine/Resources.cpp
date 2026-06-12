@@ -579,6 +579,102 @@ void Resources::CreateDefaultShader()
 		shader->CreateComputeShader(L"..\\Resources\\Shader\\animation.fx", "CS_Main", "cs_5_0");
 		Add<Shader>(L"ComputeAnimation", shader);
 	}
+
+	// PBR Deferred / GBuffer
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::DEFERRED,
+			RASTERIZER_TYPE::CULL_BACK,
+			DEPTH_STENCIL_TYPE::LESS,
+			BLEND_TYPE::DEFAULT
+		};
+
+		ShaderArg arg =
+		{
+			"VS_PBR",
+			"",
+			"",
+			"",
+			"PS_PBR"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\pbr.fx", info, arg);
+
+		Add<Shader>(L"PBR_Deferred", shader);
+	}
+
+	// PBR Directional Light
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::LIGHTING,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE,
+			BLEND_TYPE::ONE_TO_ONE_BLEND
+		};
+
+		ShaderArg arg =
+		{
+			"VS_DirLight",
+			"",
+			"",
+			"",
+			"PS_DirLight"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\pbr.fx", info, arg);
+		Add<Shader>(L"PBR_DirLight", shader);
+	}
+
+	// PBR Point Light
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::LIGHTING,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE,
+			BLEND_TYPE::ONE_TO_ONE_BLEND
+		};
+
+		ShaderArg arg =
+		{
+			"VS_PointLight",
+			"",
+			"",
+			"",
+			"PS_PointLight"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\pbr.fx", info, arg);
+		Add<Shader>(L"PBR_PointLight", shader);
+	}
+
+	// PBR Final
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::LIGHTING,
+			RASTERIZER_TYPE::CULL_BACK,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE,
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Final",
+			"",
+			"",
+			"",
+			"PS_Final"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\pbr.fx", info, arg);
+		Add<Shader>(L"PBR_Final", shader);
+	}
 }
 
 void Resources::CreateDefaultMaterial()
@@ -596,9 +692,14 @@ void Resources::CreateDefaultMaterial()
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"DirLight");
 		shared_ptr<Material> material = make_shared<Material>();
 		material->SetShader(shader);
+
 		// 아래는 DEngine 의 Deferred Group 에서 만든 PositionTarget, NormalTarget 받아옴
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
+
+		// t3 = MaterialInfoTarget
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
+
 		Add<Material>(L"DirLight", material);
 	}
 
@@ -612,6 +713,10 @@ void Resources::CreateDefaultMaterial()
 		material->SetShader(shader);
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
+
+		// t3 = MaterialInfoTarget
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
+
 		material->SetVec2(0, resolution);
 		Add<Material>(L"PointLight", material);
 	}
@@ -664,6 +769,30 @@ void Resources::CreateDefaultMaterial()
 		Add<Material>(L"GameObject", material);
 	}
 
+	// PBR GameObject
+	{
+		// PBR용 GBuffer Shader
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"PBR_Deferred");
+		shared_ptr<Texture> albedo = GET_SINGLE(Resources)->Load<Texture>(L"Object_Albedo", L"..\\Resources\\Texture\\Leather.jpg");
+		shared_ptr<Texture> normal = GET_SINGLE(Resources)->Load<Texture>(L"Object_Normal", L"..\\Resources\\Texture\\Leather_Normal.jpg");
+
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetShader(shader);
+
+		// t0 = Albedo
+		// t1 = Normal
+		material->SetTexture(0, albedo);
+		material->SetTexture(1, normal);
+
+		// PBR 상수값
+		material->SetPBRBaseColor(Vec4(1.f, 1.f, 1.f, 1.f));
+		material->SetPBRMetallic(0.0f);
+		material->SetPBRRoughness(0.5f);
+		material->SetPBRAO(1.0f);
+
+		Add<Material>(L"PBR_GameObject", material);
+	}
+
 	// Shadow
 	{
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"Shadow");
@@ -691,7 +820,6 @@ void Resources::CreateDefaultMaterial()
 		Add<Material>(L"Terrain", material);
 	}
 
-
 	// ComputeAnimation
 	{
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"ComputeAnimation");
@@ -699,5 +827,52 @@ void Resources::CreateDefaultMaterial()
 		material->SetShader(shader);
 
 		Add<Material>(L"ComputeAnimation", material);
+	}
+
+	// PBR_DirLight
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetShader(Get<Shader>(L"PBR_DirLight"));
+		
+		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
+		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
+
+		// t3 = MaterialInfoTarget
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
+		
+		Add<Material>(L"PBR_DirLight", material);
+	}
+
+	// PBR_PointLight
+	{
+		const WindowInfo& window = GDEngine->GetWindow();
+		Vec2 resolution = { static_cast<float>(window.width), static_cast<float>(window.height) };
+
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetShader(Get<Shader>(L"PBR_PointLight"));
+
+		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
+		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
+
+		// t3 = MaterialInfoTarget
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
+
+		material->SetVec2(0, resolution);
+
+		Add<Material>(L"PBR_PointLight", material);
+	}
+
+	// PBR_Final
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetShader(Get<Shader>(L"PBR_Final"));
+		assert(Get<Shader>(L"PBR_Final") != nullptr);
+
+		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseTarget"));
+		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseLightTarget"));
+		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"SpecularLightTarget"));
+
+		Add<Material>(L"PBR_Final", material);
+		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
 	}
 } 

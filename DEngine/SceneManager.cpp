@@ -239,7 +239,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 				meshRenderer->SetMesh(sphereMesh);
 			}
 			{
-				shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
+				shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"PBR_GameObject");
 				meshRenderer->SetMaterial(material->Clone());
 			}
 			dynamic_pointer_cast<SphereCollider>(obj->GetCollider())->SetRadius(0.5f);
@@ -335,7 +335,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 	}
 #pragma endregion
 
-//#pragma region ParticleSystem
+#pragma region ParticleSystem
 //	{
 //		shared_ptr<GameObject> particle = make_shared<GameObject>();
 //		particle->AddComponent(make_shared<Transform>());
@@ -344,7 +344,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 //		particle->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 100.f));
 //		scene->AddGameObject(particle);
 //	}
-//#pragma endregion
+#pragma endregion
 
 	return scene;
 }

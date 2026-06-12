@@ -47,7 +47,13 @@ PS_OUT PS_DirLight(VS_OUT input)
     float3 viewPos = g_tex_0.Sample(g_sam_0, input.uv).xyz;
     if (viewPos.z <= 0.f)
         clip(-1);
+    
+    float shadingModel = g_tex_3.Sample(g_sam_0, input.uv).w;
 
+    // lighting.fx는 Phong 전용
+    if (shadingModel >= 0.5f)
+        clip(-1);
+    
     float3 viewNormal = g_tex_1.Sample(g_sam_0, input.uv).xyz;
 
     LightColor color = CalculateLightColor(g_int_0, viewNormal, viewPos);
@@ -107,6 +113,13 @@ PS_OUT PS_PointLight(VS_OUT input)
 
     // input.pos = SV_Position = Screen 좌표
     float2 uv = float2(input.pos.x / g_vec2_0.x, input.pos.y / g_vec2_0.y);
+    
+    float shadingModel = g_tex_3.Sample(g_sam_0, uv).w;
+
+    // lighting.fx는 Phong 전용
+    if (shadingModel >= 0.5f)
+        clip(-1);
+    
     float3 viewPos = g_tex_0.Sample(g_sam_0, uv).xyz;
     if (viewPos.z <= 0.f)
         clip(-1);
