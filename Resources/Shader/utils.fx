@@ -123,4 +123,98 @@ void Skinning(inout float3 pos, inout float3 normal, inout float3 tangent,
     normal = normalize(info.normal);
 }
 
+
+
+// ============================================================
+// PBR
+// ============================================================
+
+static const float PI = 3.14159265359f;
+
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+
+    float NdotH = max(dot(N, H), 0.f);
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = NdotH2 * (a2 - 1.f) + 1.f;
+    denom = PI * denom * denom;
+
+    return a2 / max(denom, 0.00001f);
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = roughness + 1.f;
+    float k = (r * r) / 8.f;
+
+    float denom = NdotV * (1.f - k) + k;
+
+    return NdotV / max(denom, 0.00001f);
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.f);
+    float NdotL = max(dot(N, L), 0.f);
+
+    float ggxV = GeometrySchlickGGX(NdotV, roughness);
+    float ggxL = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggxV * ggxL;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.f - F0) * pow(1.f - cosTheta, 5.f);
+}
+
+void CalculatePBRDirectional(
+    float3 albedo,
+    float3 N,
+    float3 V,
+    float3 L,
+    float3 radiance,
+    float metallic,
+    float roughness,
+    out float3 diffuseOut,
+    out float3 specularOut)
+{
+    float3 H = normalize(V + L);
+
+    float NdotL = max(dot(N, L), 0.f);
+    float NdotV = max(dot(N, V), 0.f);
+
+    if (NdotL <= 0.f || NdotV <= 0.f)
+    {
+        diffuseOut = float3(0.f, 0.f, 0.f);
+        specularOut = float3(0.f, 0.f, 0.f);
+        return;
+    }
+
+    float3 F0 = float3(0.04f, 0.04f, 0.04f);
+    F0 = lerp(F0, albedo, metallic);
+
+    float NDF = DistributionGGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    float3 F = FresnelSchlick(max(dot(H, V), 0.f), F0);
+
+    float3 numerator = NDF * G * F;
+    float denominator = 4.f * NdotV * NdotL + 0.0001f;
+
+    float3 specular = numerator / denominator;
+
+    float3 kS = F;
+    float3 kD = 1.f - kS;
+
+    // metallic이 1이면 diffuse는 거의 없음
+    kD *= 1.f - metallic;
+
+    float3 diffuse = kD * albedo / PI;
+
+    diffuseOut = diffuse * radiance * NdotL;
+    specularOut = specular * radiance * NdotL;
+}
 #endif

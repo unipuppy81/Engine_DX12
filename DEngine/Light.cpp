@@ -64,12 +64,19 @@ void Light::RenderPBR()
 	if (_pbrLightMaterial == nullptr)
 		return;
 
+	if (static_cast<LIGHT_TYPE>(_lightInfo.lightType) != LIGHT_TYPE::DIRECTIONAL_LIGHT)
+		return;
+
 	GetTransform()->PushData();
 
 	if (static_cast<LIGHT_TYPE>(_lightInfo.lightType) == LIGHT_TYPE::DIRECTIONAL_LIGHT)
 	{
-		shared_ptr<Texture> shadowTex = GET_SINGLE(Resources)->Get<Texture>(L"ShadowTarget");
-		_pbrLightMaterial->SetTexture(2, shadowTex);
+		// 기존 구조 유지:
+		// PBR_DirLight Material의 t0~t3은 Resources::CreateDefaultMaterial()에서 세팅한다.
+		// t2는 DiffuseTarget/Albedo로 사용한다.
+		// Shadow는 PBR에 아직 연결하지 않는다.
+		//shared_ptr<Texture> shadowTex = GET_SINGLE(Resources)->Get<Texture>(L"ShadowTarget");
+		//_pbrLightMaterial->SetTexture(2, shadowTex);
 
 		Matrix matVP = _shadowCamera->GetCamera()->GetViewMatrix() * _shadowCamera->GetCamera()->GetProjectionMatrix();
 		_pbrLightMaterial->SetMatrix(0, matVP);

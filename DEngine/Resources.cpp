@@ -834,10 +834,14 @@ void Resources::CreateDefaultMaterial()
 		shared_ptr<Material> material = make_shared<Material>();
 		material->SetShader(Get<Shader>(L"PBR_DirLight"));
 		
+		// PBR Lighting Pass 기준:
+		// t0 = GBuffer PositionTarget
+		// t1 = GBuffer NormalTarget
+		// t2 = GBuffer DiffuseTarget / Albedo
+		// t3 = GBuffer MaterialInfoTarget
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
-
-		// t3 = MaterialInfoTarget
+		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseTarget"));
 		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
 		
 		Add<Material>(L"PBR_DirLight", material);
@@ -851,10 +855,14 @@ void Resources::CreateDefaultMaterial()
 		shared_ptr<Material> material = make_shared<Material>();
 		material->SetShader(Get<Shader>(L"PBR_PointLight"));
 
+		// PBR Lighting Pass 기준:
+		// t0 = GBuffer PositionTarget
+		// t1 = GBuffer NormalTarget
+		// t2 = GBuffer DiffuseTarget / Albedo
+		// t3 = GBuffer MaterialInfoTarget
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"PositionTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"NormalTarget"));
-
-		// t3 = MaterialInfoTarget
+		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseTarget"));
 		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
 
 		material->SetVec2(0, resolution);
