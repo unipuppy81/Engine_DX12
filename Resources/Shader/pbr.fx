@@ -205,15 +205,35 @@ VS_SCREEN_OUT VS_Final(VS_SCREEN_IN input)
 
 float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
 {
-    float4 color = g_tex_0.Sample(g_sam_0, input.uv); // DiffuseTarget
-    float4 lightPower = g_tex_1.Sample(g_sam_0, input.uv); // DiffuseLightTarget
-    float4 specular = g_tex_2.Sample(g_sam_0, input.uv); // SpecularLightTarget
+    // PBR_Final Material 기준:
+    // g_tex_0 = DiffuseTarget / Albedo
+    // g_tex_1 = DiffuseLightTarget
+    // g_tex_2 = SpecularLightTarget
+    // g_tex_3 = MaterialInfoTarget
 
-    if (lightPower.x == 0.f && lightPower.y == 0.f && lightPower.z == 0.f)
+    float4 color = g_tex_0.Sample(g_sam_0, input.uv);
+    float4 lightPower = g_tex_1.Sample(g_sam_0, input.uv);
+    float4 specular = g_tex_2.Sample(g_sam_0, input.uv);
+    float4 materialInfo = g_tex_3.Sample(g_sam_0, input.uv);
+
+    if (lightPower.x == 0.f && lightPower.y == 0.f && lightPower.z == 0.f &&
+        specular.x == 0.f && specular.y == 0.f && specular.z == 0.f)
+    {
         clip(-1);
+    }
 
-    // PBR Light Pass의 diffusePBR에는 이미 albedo가 포함되어 있음.
-    return lightPower + specular;
+    float shadingModel = materialInfo.w;
+
+    if (shadingModel >= 0.5f)
+    {
+        // PBR
+        return lightPower + specular;
+    }
+    else
+    {
+        // Phong
+        return (color * lightPower) + specular;
+    }
     
     //return float4(1.f, 0.f, 0.f, 1.f);
 }

@@ -158,17 +158,35 @@ VS_OUT VS_Final(VS_IN input)
 
 float4 PS_Final(VS_OUT input) : SV_Target
 {
-    float4 output = (float4)0;
-
-    float4 lightPower = g_tex_1.Sample(g_sam_0, input.uv);
-    if (lightPower.x == 0.f && lightPower.y == 0.f && lightPower.z == 0.f)
-        clip(-1);
+    // Final Material ±âÁØ:
+    // g_tex_0 = DiffuseTarget / Albedo
+    // g_tex_1 = DiffuseLightTarget
+    // g_tex_2 = SpecularLightTarget
+    // g_tex_3 = MaterialInfoTarget
 
     float4 color = g_tex_0.Sample(g_sam_0, input.uv);
+    float4 lightPower = g_tex_1.Sample(g_sam_0, input.uv);
     float4 specular = g_tex_2.Sample(g_sam_0, input.uv);
+    float4 materialInfo = g_tex_3.Sample(g_sam_0, input.uv);
 
-    output = (color * lightPower) + specular;
-    return output;
+    if (lightPower.x == 0.f && lightPower.y == 0.f && lightPower.z == 0.f &&
+        specular.x == 0.f && specular.y == 0.f && specular.z == 0.f)
+    {
+        clip(-1);
+    }
+
+    float shadingModel = materialInfo.w;
+
+    if (shadingModel >= 0.5f)
+    {
+        // PBR:
+        return lightPower + specular;
+    }
+    else
+    {
+        // Phong:
+        return (color * lightPower) + specular;
+    }
 }
 
 #endif

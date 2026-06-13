@@ -729,6 +729,10 @@ void Resources::CreateDefaultMaterial()
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseLightTarget"));
 		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"SpecularLightTarget"));
+
+		// t3 = GBuffer MaterialInfoTarget
+		// materialInfo.w로 Phong / PBR 분기하기 위해 필요
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
 		Add<Material>(L"Final", material);
 	}
 
@@ -879,6 +883,7 @@ void Resources::CreateDefaultMaterial()
 		material->SetTexture(0, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseTarget"));
 		material->SetTexture(1, GET_SINGLE(Resources)->Get<Texture>(L"DiffuseLightTarget"));
 		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"SpecularLightTarget"));
+		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
 
 		Add<Material>(L"PBR_Final", material);
 		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
