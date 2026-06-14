@@ -129,17 +129,17 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     //float lightIntensity = 1.0f;
     
     
-    // 금속
-    // float metallic = 0.0f;
-    // float roughness = 0.4f;
-    // float ao = 1.f;
-    // float lightIntensity = 5.0f;
-    
-    // 금속
-    float metallic = 0.9f;
+    // 비금속
+    float metallic = 0.0f;
     float roughness = 0.4f;
     float ao = 1.f;
     float lightIntensity = 5.0f;
+    
+    // 금속
+    // float metallic = 0.9f;
+    // float roughness = 0.4f;
+    // float ao = 1.f;
+    // float lightIntensity = 5.0f;
     
     float3 viewLightDir = normalize(mul(float4(g_light[g_int_0].direction.xyz, 0.f), g_matView).xyz);
 
@@ -166,6 +166,40 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     );
 
     diffusePBR *= ao;
+    
+// ============================================================
+// Temporary Ambient IBL
+// ============================================================
+    {
+        // F0 계산
+        float3 F0 = float3(0.04f, 0.04f, 0.04f);
+        F0 = lerp(F0, albedo, metallic);
+
+        // View 방향 기준 Fresnel
+        float NdotV = max(dot(N, V), 0.f);
+        float3 F = FresnelSchlick(NdotV, F0);
+
+        // diffuse/specular 비율
+        float3 kS = F;
+        float3 kD = 1.f - kS;
+        kD *= 1.f - metallic;
+
+        // 아직 Cubemap IBL이 없으므로 상수 환경광으로 대체
+        // float3 ambientColor = float3(0.03f, 0.03f, 0.03f);
+        // float3 ambient = kD * albedo * ambientColor * ao;
+        // 
+        // output.diffuse = float4(diffusePBR + ambient, 1.f);
+        // output.specular = float4(specularPBR, 1.f);
+        
+        float3 specularAmbientColor = float3(0.02f, 0.02f, 0.02f);
+        float3 specularAmbient = F * specularAmbientColor * ao;
+        
+        output.diffuse = float4(diffusePBR + ambient, 1.f);
+        output.specular = float4(specularPBR + specularAmbient, 1.f);
+        
+        return output;
+    }
+    
     
     output.diffuse = float4(diffusePBR, 1.f);
     output.specular = float4(specularPBR, 1.f);
@@ -234,8 +268,6 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
         // Phong
         return (color * lightPower) + specular;
     }
-    
-    //return float4(1.f, 0.f, 0.f, 1.f);
 }
 
 #endif

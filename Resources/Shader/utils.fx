@@ -182,6 +182,10 @@ void CalculatePBRDirectional(
     out float3 diffuseOut,
     out float3 specularOut)
 {
+    albedo = saturate(albedo);
+    metallic = saturate(metallic);
+    roughness = max(saturate(roughness), 0.04f);
+    
     float3 H = normalize(V + L);
 
     float NdotL = max(dot(N, L), 0.f);
@@ -208,7 +212,6 @@ void CalculatePBRDirectional(
 
     float3 kS = F;
     float3 kD = 1.f - kS;
-
     // metallic이 1이면 diffuse는 거의 없음
     kD *= 1.f - metallic;
 
