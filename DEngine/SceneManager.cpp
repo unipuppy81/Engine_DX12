@@ -124,6 +124,13 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 	SetLayerName(1, L"UI");
 #pragma endregion
 
+#pragma region HDR_Load_Test
+	{
+		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
+		assert(hdr != nullptr);
+	}
+#pragma endregion
+
 #pragma region ComputeShader
 	{
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"ComputeShader");
@@ -190,6 +197,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 		{
 			shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"Skybox");
 			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"Sky01", L"..\\Resources\\Texture\\Sky01.jpg");
+			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"SkyHDR", L"..\\Resources\\Texture\\HDR\\studio_test.hdr");
 			shared_ptr<Material> material = make_shared<Material>();
 			material->SetShader(shader);
 			material->SetTexture(0, texture);
@@ -289,7 +297,8 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			else if (i < 5)
 				texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->GetRTTexture(i - 3);
 			else
-				texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetRTTexture(0);
+				texture = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
+				//texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetRTTexture(0);
 
 			shared_ptr<Material> material = make_shared<Material>();
 			material->SetShader(shader);

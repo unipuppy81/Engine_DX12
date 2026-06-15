@@ -194,7 +194,7 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
         float3 specularAmbientColor = float3(0.02f, 0.02f, 0.02f);
         float3 specularAmbient = F * specularAmbientColor * ao;
         
-        output.diffuse = float4(diffusePBR + ambient, 1.f);
+        output.diffuse = float4(diffusePBR /*+ ambient*/, 1.f);
         output.specular = float4(specularPBR + specularAmbient, 1.f);
         
         return output;

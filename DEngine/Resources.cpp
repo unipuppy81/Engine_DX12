@@ -687,6 +687,13 @@ void Resources::CreateDefaultMaterial()
 		Add<Material>(L"Skybox", material);
 	}
 
+	// IBL / HDR Environment
+	{
+		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Load<Texture>(
+			L"HDR_Studio",
+			L"..\\Resources\\Texture\\HDRI\\studio_test.hdr");
+	}
+
 	// DirLight
 	{
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"DirLight");
@@ -888,4 +895,5 @@ void Resources::CreateDefaultMaterial()
 		Add<Material>(L"PBR_Final", material);
 		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
 	}
+
 } 

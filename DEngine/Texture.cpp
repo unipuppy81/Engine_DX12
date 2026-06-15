@@ -21,6 +21,8 @@ void Texture::Load(const wstring& path)
 		::LoadFromDDSFile(path.c_str(), DDS_FLAGS_NONE, nullptr, _image);
 	else if (ext == L".tga" || ext == L".TGA")
 		::LoadFromTGAFile(path.c_str(), nullptr, _image);
+	else if (ext == L".hdr" || ext == L".HDR")
+		LoadFromHDRFile(path.c_str(), nullptr, _image);
 	else // png, jpg, jpeg, bmp
 		::LoadFromWICFile(path.c_str(), WIC_FLAGS_NONE, nullptr, _image);
 
@@ -79,7 +81,7 @@ void Texture::Load(const wstring& path)
 	srvDesc.Format = _image.GetMetadata().format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MipLevels = _image.GetMetadata().mipLevels;
 	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
 }
 
@@ -176,7 +178,7 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 			_uavHeapBegin = _uavHeap->GetCPUDescriptorHandleForHeapStart();
 
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = _image.GetMetadata().format;
+			uavDesc.Format = _desc.Format; //_image.GetMetadata().format;
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 
 			DEVICE->CreateUnorderedAccessView(_tex2D.Get(), nullptr, &uavDesc, _uavHeapBegin);
@@ -193,7 +195,7 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = _image.GetMetadata().format;
+		srvDesc.Format = _desc.Format; //_image.GetMetadata().format;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
 		DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
