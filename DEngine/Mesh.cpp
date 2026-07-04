@@ -35,6 +35,8 @@ void Mesh::Render(uint32 instanceCount, uint32 idx)
 	// Diagnostics
 	uint32 triangleCount = (_vecIndexInfo[idx].count / 3) * instanceCount;
 	GET_SINGLE(DiagnosticsManager)->AddDrawCallData(triangleCount);
+
+	DX_LOG(L"[CULLING] triangleCount : " << triangleCount);
 }
 
 void Mesh::Render(shared_ptr<InstancingBuffer>& buffer, uint32 idx)

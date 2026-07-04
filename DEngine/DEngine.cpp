@@ -31,7 +31,7 @@ void DEngine::Init(const WindowInfo& info)
 	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 256);
-
+	CreateConstantBuffer(CBV_REGISTER::b4, sizeof(CubeCaptureParams), 6);
 
 	CreateRenderTargetGroups();
 
@@ -213,12 +213,12 @@ void DEngine::CreateRenderTargetGroups()
 		vector<RenderTarget> rtVec(RENDER_TARGET_LIGHTING_GROUP_MEMBER_COUNT);
 
 		rtVec[0].target = GET_SINGLE(Resources)->CreateTexture(L"DiffuseLightTarget",
-			DXGI_FORMAT_R16G16B16A16_FLOAT, _window.width, _window.height,
+			DXGI_FORMAT_R8G8B8A8_UNORM, _window.width, _window.height,
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 		rtVec[1].target = GET_SINGLE(Resources)->CreateTexture(L"SpecularLightTarget",
-			DXGI_FORMAT_R16G16B16A16_FLOAT, _window.width, _window.height,
+			DXGI_FORMAT_R8G8B8A8_UNORM, _window.width, _window.height,
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 

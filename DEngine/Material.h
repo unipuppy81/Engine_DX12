@@ -73,6 +73,7 @@ private:
 	shared_ptr<Shader>	_shader;
 	MaterialParams		_params;
 	PBRMaterialParams	_pbrParams;
+	CubeCaptureParams	_cubeCapParams;
 
 	array<shared_ptr<Texture>, MATERIAL_ARG_COUNT> _textures;
 

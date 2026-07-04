@@ -12,6 +12,13 @@ public:
 		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 		D3D12_RESOURCE_FLAGS resFlags, Vec4 clearColor = Vec4());
 
+	void CreateCubeMap(
+		DXGI_FORMAT format,
+		uint32 size,
+		const D3D12_HEAP_PROPERTIES& heapProperty,
+		D3D12_HEAP_FLAGS heapFlags,
+		D3D12_RESOURCE_FLAGS resFlags);
+
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
 
 public:
@@ -22,6 +29,7 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle() { return _srvHeapBegin; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle() { return _uavHeapBegin; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(uint32 index = 0);
 
 	float GetWidth() { return static_cast<float>(_desc.Width); }
 	float GetHeight() { return static_cast<float>(_desc.Height); }

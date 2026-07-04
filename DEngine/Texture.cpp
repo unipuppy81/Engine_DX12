@@ -12,6 +12,19 @@ Texture::~Texture()
 
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 index)
+{
+	if (_rtvHeap == nullptr)
+	{
+		::OutputDebugStringW(L"[Texture::GetRTVHandle] _rtvHeap is nullptr\n");
+		assert(false);
+	}
+	
+	uint32 rtvDescriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->GetCPUDescriptorHandleForHeapStart(), index, rtvDescriptorSize);
+}
+
 void Texture::Load(const wstring& path)
 {
 	// 파일 확장자 얻기
@@ -124,6 +137,87 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 	assert(SUCCEEDED(hr));
 
 	CreateFromResource(_tex2D);
+}
+
+
+void Texture::CreateCubeMap(
+	DXGI_FORMAT format,
+	uint32 size,
+	const D3D12_HEAP_PROPERTIES& heapProperty,
+	D3D12_HEAP_FLAGS heapFlags,
+	D3D12_RESOURCE_FLAGS resFlags)
+{
+	// CubeMap = Texture2D Array 6개
+	_desc = CD3DX12_RESOURCE_DESC::Tex2D(
+		format,
+		size,
+		size,
+		6,      // arraySize
+		1);     // mipLevels
+
+	_desc.Flags = resFlags;
+
+	HRESULT hr = DEVICE->CreateCommittedResource(
+		&heapProperty,
+		heapFlags,
+		&_desc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&_tex2D));
+
+	assert(SUCCEEDED(hr));
+
+	// SRV 생성
+	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+	srvHeapDesc.NumDescriptors = 1;
+	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	hr = DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&_srvHeap));
+	assert(SUCCEEDED(hr));
+
+	_srvHeapBegin = _srvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = _desc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MipLevels = _desc.MipLevels;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+
+	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
+
+	// RTV Heap 생성: CubeMap face 6개
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.NumDescriptors = 6;
+	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	hr = DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&_rtvHeap));
+	assert(SUCCEEDED(hr));
+	assert(_rtvHeap != nullptr);
+
+	uint32 rtvDescriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = _rtvHeap->GetCPUDescriptorHandleForHeapStart();
+
+	for (uint32 i = 0; i < 6; i++)
+	{
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = _desc.Format;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+		rtvDesc.Texture2DArray.MipSlice = 0;
+		rtvDesc.Texture2DArray.FirstArraySlice = i;
+		rtvDesc.Texture2DArray.ArraySize = 1;
+
+		DEVICE->CreateRenderTargetView(
+			_tex2D.Get(),
+			&rtvDesc,
+			rtvHandle);
+
+		rtvHandle.ptr += rtvDescriptorSize;
+	}
 }
 
 void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)

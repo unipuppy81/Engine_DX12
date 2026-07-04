@@ -199,6 +199,12 @@ struct AnimFrameParams
 	Vec4	translation;
 };
 
+struct CubeCaptureParams
+{
+	int32 cubeFaceIndex;
+	Vec3 padding;
+};
+
 extern unique_ptr<class DEngine> GDEngine;
 
 // Utils

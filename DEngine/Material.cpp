@@ -19,7 +19,7 @@ void Material::PushGraphicsData()
 	CONST_BUFFER(CONSTANT_BUFFER_TYPE::MATERIAL)->PushGraphicsData(&_params, sizeof(_params));
 	// PBRMaterialParams -> b3
 	CONST_BUFFER(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->PushGraphicsData(&_pbrParams, sizeof(_pbrParams));
-
+	
 	// SRV ¾÷·Îµå
 	for (size_t i = 0; i < _textures.size(); i++)
 	{

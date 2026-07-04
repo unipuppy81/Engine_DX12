@@ -69,6 +69,7 @@ void GraphicsCommandQueue::RenderBegin()
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CUBE_CAPTURE)->Clear();
 
 	GDEngine->GetGraphicsDescHeap()->Clear();
 

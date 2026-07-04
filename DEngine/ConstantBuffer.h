@@ -6,6 +6,7 @@ enum class CONSTANT_BUFFER_TYPE : uint8
 	TRANSFORM,
 	MATERIAL,
 	MATERIAL_PBR,
+	CUBE_CAPTURE,
 	// ...
 	END
 };

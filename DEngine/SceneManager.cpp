@@ -128,6 +128,9 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 	{
 		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
 		assert(hdr != nullptr);
+
+		shared_ptr<Texture> envCube = GET_SINGLE(Resources)->CreateCubeMap(L"EnvCubeMap", DXGI_FORMAT_R8G8B8A8_UNORM, 512);
+		assert(envCube != nullptr);
 	}
 #pragma endregion
 
@@ -161,7 +164,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 		camera->AddComponent(make_shared<Camera>()); // Near=1, Far=1000, FOV=45µµ
 		camera->AddComponent(make_shared<TestCameraScript>());
 
-		camera->GetCamera()->SetFar(500);
+		camera->GetCamera()->SetFar(1000);
 		camera->GetTransform()->SetLocalPosition(Vec3(100.f, 0.f, 0.f));
 		uint8 layerIndex = GET_SINGLE(SceneManager)->LayerNameToIndex(L"UI");
 		camera->GetCamera()->SetCullingMaskLayerOnOff(layerIndex, true); // UI´Â ¾È ÂïÀ½
@@ -188,6 +191,8 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 	{
 		shared_ptr<GameObject> skybox = make_shared<GameObject>();
 		skybox->AddComponent(make_shared<Transform>());
+		skybox->GetTransform()->SetLocalScale(Vec3(500.f, 500.f, 500.f));
+		skybox->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 0.f));
 		skybox->SetCheckFrustum(false);
 		shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
 		{
@@ -195,12 +200,17 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			meshRenderer->SetMesh(sphereMesh);
 		}
 		{
-			shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"Skybox");
-			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"Sky01", L"..\\Resources\\Texture\\Sky01.jpg");
-			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"SkyHDR", L"..\\Resources\\Texture\\HDR\\studio_test.hdr");
+			//shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"Skybox");
+			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"Sky01", L"..\\Resources\\Texture\\Sky01.jpg");
+			
+			shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"SkyboxCube");
+			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"EnvCubeMap");
+			assert(texture != nullptr);
+			
 			shared_ptr<Material> material = make_shared<Material>();
 			material->SetShader(shader);
 			material->SetTexture(0, texture);
+
 			meshRenderer->SetMaterial(material);
 		}
 		skybox->AddComponent(meshRenderer);

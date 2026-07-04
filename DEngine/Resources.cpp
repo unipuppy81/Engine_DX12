@@ -311,6 +311,26 @@ shared_ptr<Texture> Resources::CreateTexture(const wstring& name, DXGI_FORMAT fo
 	return texture;
 }
 
+shared_ptr<Texture> Resources::CreateCubeMap(
+	const wstring& key,
+	DXGI_FORMAT format,
+	uint32 size,
+	D3D12_RESOURCE_FLAGS flags)
+{
+	shared_ptr<Texture> texture = make_shared<Texture>();
+
+	texture->CreateCubeMap(
+		format,
+		size,
+		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		flags);
+
+	Add<Texture>(key, texture);
+
+	return texture;
+}
+
 shared_ptr<Texture> Resources::CreateTextureFromResource(const wstring& name, ComPtr<ID3D12Resource> tex2D)
 {
 	shared_ptr<Texture> texture = make_shared<Texture>();
@@ -675,6 +695,60 @@ void Resources::CreateDefaultShader()
 		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\pbr.fx", info, arg);
 		Add<Shader>(L"PBR_Final", shader);
 	}
+
+	// Equirectangular HDR 2D -> Cubemap
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::FORWARD,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(
+			L"..\\Resources\\Shader\\equirect_to_cube.fx",
+			info,
+			arg);
+
+		Add<Shader>(L"EquirectToCube", shader);
+	}
+
+	// Skybox Cube
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::FORWARD,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::LESS_EQUAL
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(
+			L"..\\Resources\\Shader\\skybox_cube.fx",
+			info,
+			arg);
+
+		Add<Shader>(L"SkyboxCube", shader);
+	}
 }
 
 void Resources::CreateDefaultMaterial()
@@ -896,4 +970,18 @@ void Resources::CreateDefaultMaterial()
 		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
 	}
 
+	// Equirectangular HDR 2D -> Cubemap
+	{
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"EquirectToCube");
+		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
+
+		assert(shader != nullptr);
+		assert(hdr != nullptr);
+
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetShader(shader);
+		material->SetTexture(0, hdr);
+
+		Add<Material>(L"EquirectToCube", material);
+	}
 } 

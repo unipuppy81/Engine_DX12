@@ -33,6 +33,13 @@ public:
 
 	const vector<shared_ptr<GameObject>>& GetGameObjects() { return _gameObjects; }
 
+	// TEST
+private:
+	bool _isIBLBaked = false;
+
+	void BakeIBLIfNeeded();
+	void ConvertHDRToCube_Test();
+
 private:
 	vector<shared_ptr<GameObject>> _gameObjects;
 	vector<shared_ptr<class Camera>>	_cameras;

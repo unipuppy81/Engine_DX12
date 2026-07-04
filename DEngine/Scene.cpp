@@ -61,6 +61,8 @@ void Scene::Render()
 
 	ClearRTV();
 
+	BakeIBLIfNeeded();
+
 	RenderShadow();
 	RenderDeferred();
 	RenderLights();
@@ -205,3 +207,88 @@ void Scene::RemoveGameObject(shared_ptr<GameObject> gameObject)
 	if (findIt != _gameObjects.end())
 		_gameObjects.erase(findIt);
 }	
+
+
+void Scene::BakeIBLIfNeeded()
+{
+	if (_isIBLBaked)
+		return;
+
+	ConvertHDRToCube_Test();
+
+	_isIBLBaked = true;
+}
+
+void Scene::ConvertHDRToCube_Test()
+{
+	shared_ptr<Texture> envCube = GET_SINGLE(Resources)->Get<Texture>(L"EnvCubeMap");
+	assert(envCube != nullptr);
+	assert(envCube->GetTex2D() != nullptr);
+
+	shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"EquirectToCube");
+	assert(material != nullptr);
+
+	shared_ptr<Mesh> cubeMesh = GET_SINGLE(Resources)->LoadCubeMesh();
+	assert(cubeMesh != nullptr);
+
+	ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
+	assert(cmdList != nullptr);
+
+	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		envCube->GetTex2D().Get(),
+		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	cmdList->ResourceBarrier(1, &barrier);
+
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0.f;
+	viewport.TopLeftY = 0.f;
+	viewport.Width = 512.f;
+	viewport.Height = 512.f;
+	viewport.MinDepth = 0.f;
+	viewport.MaxDepth = 1.f;
+
+	D3D12_RECT scissor = {};
+	scissor.left = 0;
+	scissor.top = 0;
+	scissor.right = 512;
+	scissor.bottom = 512;
+
+	cmdList->RSSetViewports(1, &viewport);
+	cmdList->RSSetScissorRects(1, &scissor);
+
+	float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
+
+	for (uint32 face = 0; face < 6; face++)
+	{
+		uint32 srcFace = face;
+
+		// +Y / -Y 방향만 서로 교체해서 저장
+		if (face == 2)
+			srcFace = 3;
+		else if (face == 3)
+			srcFace = 2;
+
+		CubeCaptureParams cubeParams = {};
+		cubeParams.cubeFaceIndex = static_cast<int32>(srcFace);
+
+		GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CUBE_CAPTURE)
+			->PushGraphicsData(&cubeParams, sizeof(cubeParams));
+
+		D3D12_CPU_DESCRIPTOR_HANDLE rtv = envCube->GetRTVHandle(face);
+
+		cmdList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
+		cmdList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+
+		material->PushGraphicsData();
+		cubeMesh->Render();
+	}
+
+	barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		envCube->GetTex2D().Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	cmdList->ResourceBarrier(1, &barrier);
+}

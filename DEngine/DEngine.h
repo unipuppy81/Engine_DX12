@@ -33,6 +33,8 @@ public:
 	shared_ptr<ConstantBuffer> GetConstantBuffer(CONSTANT_BUFFER_TYPE type) { return _constantBuffers[static_cast<uint8>(type)]; }	
 	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type) { return _rtGroups[static_cast<uint8>(type)]; }
 
+	// uint32 GetRtvDescriptorSize() { return _rtvDescriptorSize; }
+
 public:
 	void Render();
 	void RenderBegin();
