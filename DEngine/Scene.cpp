@@ -221,7 +221,7 @@ void Scene::BakeIBLIfNeeded()
 
 void Scene::ConvertHDRToCube_Test()
 {
-	shared_ptr<Texture> envCube = GET_SINGLE(Resources)->Get<Texture>(L"EnvCubeMap");
+	shared_ptr<Texture> envCube = GET_SINGLE(Resources)->Get<Texture>(L"EnvironmentCubeMap");
 	assert(envCube != nullptr);
 	assert(envCube->GetTex2D() != nullptr);
 

@@ -34,8 +34,7 @@ public:
 		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 		D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE, Vec4 clearColor = Vec4());
 
-	shared_ptr<Texture> CreateCubeMap(const wstring& key, DXGI_FORMAT format, uint32 size,
-		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+	shared_ptr<Texture> CreateCubeMap(const wstring& key, DXGI_FORMAT format, uint32 size, uint32 mipLevels, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 	shared_ptr<Texture> CreateTextureFromResource(const wstring& name, ComPtr<ID3D12Resource> tex2D);
 
@@ -43,6 +42,7 @@ public:
 
 private:
 	void CreateDefaultShader();
+	void CreateDefaultTexture();
 	void CreateDefaultMaterial();
 
 private:

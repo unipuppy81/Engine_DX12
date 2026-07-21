@@ -59,8 +59,8 @@ using namespace Microsoft::WRL;
 #pragma comment(lib, "FBX\\debug\\libxml2-md.lib")
 #pragma comment(lib, "FBX\\debug\\zlib-md.lib")
 #else
-#pragma comment(lib, "FBX\\release\libfbxsdk-md.lib")
-#pragma comment(lib, "FBX\\release\libxml2-md.lib")
+#pragma comment(lib, "FBX\\release\\libfbxsdk-md.lib")
+#pragma comment(lib, "FBX\\release\\libxml2-md.lib")
 #pragma comment(lib, "FBX\\release\\zlib-md.lib")
 #endif
 
@@ -201,8 +201,9 @@ struct AnimFrameParams
 
 struct CubeCaptureParams
 {
-	int32 cubeFaceIndex;
-	Vec3 padding;
+	int32	cubeFaceIndex;
+	float	roughness;
+	Vec2	padding;
 };
 
 extern unique_ptr<class DEngine> GDEngine;

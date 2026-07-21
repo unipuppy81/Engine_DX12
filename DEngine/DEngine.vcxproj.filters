@@ -189,6 +189,9 @@
     <ClCompile Include="GpuTimer.cpp">
       <Filter>Diagnostics</Filter>
     </ClCompile>
+    <ClCompile Include="IBLManager.cpp">
+      <Filter>Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -350,6 +353,9 @@
     <ClInclude Include="GpuTimer.h">
       <Filter>Diagnostics</Filter>
     </ClInclude>
+    <ClInclude Include="IBLManager.h">
+      <Filter>Manager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">
@@ -403,6 +409,12 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="..\Resources\Shader\skybox_cube.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Resources\Shader\prefilter.fx">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Resources\Shader\irradiance.fx">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

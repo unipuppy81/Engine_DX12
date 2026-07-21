@@ -25,6 +25,18 @@ D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 index)
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->GetCPUDescriptorHandleForHeapStart(), index, rtvDescriptorSize);
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 faceIndex, uint32 mipLevel)
+{
+	assert(_rtvHeap != nullptr);
+	assert(faceIndex < 6);
+	assert(mipLevel < _desc.MipLevels);
+
+	uint32 descriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	uint32 descriptorIndex = mipLevel * 6 + faceIndex;
+
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->GetCPUDescriptorHandleForHeapStart(),descriptorIndex, descriptorSize);
+}
+
 void Texture::Load(const wstring& path)
 {
 	// 파일 확장자 얻기
@@ -143,6 +155,7 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 void Texture::CreateCubeMap(
 	DXGI_FORMAT format,
 	uint32 size,
+	uint32 mipLevels,
 	const D3D12_HEAP_PROPERTIES& heapProperty,
 	D3D12_HEAP_FLAGS heapFlags,
 	D3D12_RESOURCE_FLAGS resFlags)
@@ -153,7 +166,7 @@ void Texture::CreateCubeMap(
 		size,
 		size,
 		6,      // arraySize
-		1);     // mipLevels
+		mipLevels);     // mipLevels
 
 	_desc.Flags = resFlags;
 

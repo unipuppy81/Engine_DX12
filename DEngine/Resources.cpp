@@ -311,17 +311,15 @@ shared_ptr<Texture> Resources::CreateTexture(const wstring& name, DXGI_FORMAT fo
 	return texture;
 }
 
-shared_ptr<Texture> Resources::CreateCubeMap(
-	const wstring& key,
-	DXGI_FORMAT format,
-	uint32 size,
-	D3D12_RESOURCE_FLAGS flags)
+shared_ptr<Texture> Resources::CreateCubeMap(const wstring& key, DXGI_FORMAT format, 
+	uint32 size, uint32 mipLevels, D3D12_RESOURCE_FLAGS flags)
 {
 	shared_ptr<Texture> texture = make_shared<Texture>();
 
 	texture->CreateCubeMap(
 		format,
 		size,
+		mipLevels,
 		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		flags);
@@ -696,33 +694,6 @@ void Resources::CreateDefaultShader()
 		Add<Shader>(L"PBR_Final", shader);
 	}
 
-	// Equirectangular HDR 2D -> Cubemap
-	{
-		ShaderInfo info =
-		{
-			SHADER_TYPE::FORWARD,
-			RASTERIZER_TYPE::CULL_NONE,
-			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
-		};
-
-		ShaderArg arg =
-		{
-			"VS_Main",
-			"",
-			"",
-			"",
-			"PS_Main"
-		};
-
-		shared_ptr<Shader> shader = make_shared<Shader>();
-		shader->CreateGraphicsShader(
-			L"..\\Resources\\Shader\\equirect_to_cube.fx",
-			info,
-			arg);
-
-		Add<Shader>(L"EquirectToCube", shader);
-	}
-
 	// Skybox Cube
 	{
 		ShaderInfo info =
@@ -749,6 +720,81 @@ void Resources::CreateDefaultShader()
 
 		Add<Shader>(L"SkyboxCube", shader);
 	}
+
+	// Equirectangular HDR 2D -> Cubemap
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::FORWARD,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\equirect_to_cube.fx", info, arg);
+		Add<Shader>(L"EquirectToCube", shader);
+	}
+
+	// Irradiance Map
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::FORWARD,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\irradiance.fx", info, arg);
+		Add<Shader>(L"IBL_Irradiance", shader);
+	}
+}
+
+void Resources::CreateDefaultTexture()
+{
+	Load<Texture>(L"HDR_Studio", L"..\\Resources\\Texture\\HDRI\\studio_test.hdr");
+
+	// Environment CubeMap
+	CreateCubeMap(
+		L"EnvironmentCubeMap",
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		512,
+		1,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+	// Irradiance Map
+	CreateCubeMap(
+		L"IrradianceMap",
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		32,
+		1,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+	// Prefiltered Map
+	CreateCubeMap(
+		L"PrefilteredMap",
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		128,
+		5,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 }
 
 void Resources::CreateDefaultMaterial()
@@ -983,5 +1029,16 @@ void Resources::CreateDefaultMaterial()
 		material->SetTexture(0, hdr);
 
 		Add<Material>(L"EquirectToCube", material);
+	}
+
+	// CreateDefaultMaterial()
+	{
+		shared_ptr<Material> irradianceMaterial = make_shared<Material>();
+		irradianceMaterial->SetShader(Get<Shader>(L"IBL_Irradiance"));
+		Add<Material>(L"IBL_Irradiance", irradianceMaterial);
+
+		shared_ptr<Material> prefilterMaterial = make_shared<Material>();
+		prefilterMaterial->SetShader(Get<Shader>(L"IBL_Prefilter"));
+		Add<Material>(L"IBL_Prefilter", prefilterMaterial);
 	}
 } 

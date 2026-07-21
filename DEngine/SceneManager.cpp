@@ -127,9 +127,9 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 #pragma region HDR_Load_Test
 	{
 		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
+		shared_ptr<Texture> envCube = GET_SINGLE(Resources)->CreateCubeMap(L"EnvironmentCubeMap", DXGI_FORMAT_R8G8B8A8_UNORM, 512, 1);
+		
 		assert(hdr != nullptr);
-
-		shared_ptr<Texture> envCube = GET_SINGLE(Resources)->CreateCubeMap(L"EnvCubeMap", DXGI_FORMAT_R8G8B8A8_UNORM, 512);
 		assert(envCube != nullptr);
 	}
 #pragma endregion
@@ -204,7 +204,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"Sky01", L"..\\Resources\\Texture\\Sky01.jpg");
 			
 			shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"SkyboxCube");
-			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"EnvCubeMap");
+			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"EnvironmentCubeMap");
 			assert(texture != nullptr);
 			
 			shared_ptr<Material> material = make_shared<Material>();
