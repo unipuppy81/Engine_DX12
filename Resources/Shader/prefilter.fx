@@ -35,7 +35,7 @@ float3 GetCubeDirection(int faceIndex, float2 uv)
     float2 p = uv * 2.f - 1.f;
 
     float u = p.x;
-    float v = -p.y;
+    float v = p.y;
 
     if (faceIndex == 0) // +X
         return normalize(float3(1.f, v, -u));

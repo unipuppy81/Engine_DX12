@@ -204,6 +204,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Load<Texture>(L"Sky01", L"..\\Resources\\Texture\\Sky01.jpg");
 			
 			shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"SkyboxCube");
+			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"PrefilteredMap");
 			//shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"IrradianceMap");
 			shared_ptr<Texture> texture = GET_SINGLE(Resources)->Get<Texture>(L"EnvironmentCubeMap");
 
@@ -308,12 +309,21 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 			shared_ptr<Texture> texture;
 			if (i < 3)
+			{
 				texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->GetRTTexture(i);
+
+			}
 			else if (i < 5)
+			{
 				texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->GetRTTexture(i - 3);
+
+			}
 			else
+			{
+				//texture = GET_SINGLE(Resources)->Get<Texture>(L"BRDFLUT");
 				texture = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
 				//texture = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetRTTexture(0);
+			}
 
 			shared_ptr<Material> material = make_shared<Material>();
 			material->SetShader(shader);

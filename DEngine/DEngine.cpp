@@ -46,8 +46,6 @@ void DEngine::Init(const WindowInfo& info)
 	GET_SINGLE(IBLManager)->Init();
 	_graphicsCmdQueue->EndInitCommands();
 
-	GET_SINGLE(IBLManager)->Init();
-
 	// ImGui
 	GET_SINGLE(DiagnosticsManager)->Init();
 	GET_SINGLE(ImGuiManager)->Init(info.hwnd);

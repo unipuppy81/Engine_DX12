@@ -59,14 +59,6 @@ float3 GetCubeDirection(int faceIndex, float2 uv)
 
 float4 PS_Main(VS_OUT input) : SV_Target
 {
-    // return float4(1.f, 1.f, 1.f, 1.f);
-    float3 N2 = GetCubeDirection(g_cubeFaceIndex, input.screenUV);
-    return float4(
-        g_environmentCubeMap.SampleLevel(g_linearSampler, N2, 0.f).rgb,
-        1.f
-    );
-    
-    
     const float PI = 3.14159265359f;
     const float sampleDelta = 0.025f;
 

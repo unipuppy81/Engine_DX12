@@ -10,8 +10,8 @@ void IBLManager::Init()
 {
 	CreateEnvironmentCube();
 	CreateIrradianceMap();
-	//CreatePrefilteredMap();
-	//CreateBRDFLUT();
+	CreatePrefilteredMap();
+	CreateBRDFLUT();
 }
 
 void IBLManager::CreateEnvironmentCube()
@@ -19,12 +19,10 @@ void IBLManager::CreateEnvironmentCube()
     _environmentMap = GET_SINGLE(Resources)->Get<Texture>(L"EnvironmentCubeMap");
     shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"IBL_Environment");
 
-    assert(_environmentMap != nullptr);
-    assert(_environmentMap->GetTex2D() != nullptr);
-    assert(material != nullptr);
+    assert(_environmentMap);
+    assert(material);
 
     ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
-    assert(cmdList != nullptr);
 
     D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _environmentMap->GetTex2D().Get(),
@@ -56,24 +54,24 @@ void IBLManager::CreateEnvironmentCube()
     {
         uint32 directionFace = face;
      
-        if (face == 2)
-            directionFace = 3;
-        else if (face == 3)
-            directionFace = 2;
+        if (face == 2) directionFace = 3;
+        else if (face == 3) directionFace = 2;
 
         IBLCubemapParams cubeParams = {};
         cubeParams.cubeFaceIndex = directionFace;
-
-        GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->PushGraphicsData(&cubeParams, sizeof(cubeParams));
 
         D3D12_CPU_DESCRIPTOR_HANDLE rtv = _environmentMap->GetRTVHandle(face);
 
         cmdList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
         cmdList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 
+        // b2, b3, t0, PSO
         material->PushGraphicsData();
+        // b4
+        GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->PushGraphicsData(&cubeParams, sizeof(cubeParams));
+        // CBV/SRV 테이블 바인딩
+        GDEngine->GetGraphicsDescHeap()->CommitTable();
 
-        // VS   SV_VertexID   Fullscreen Triangle     
         cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmdList->DrawInstanced(3, 1, 0, 0);
     }
@@ -166,15 +164,15 @@ void IBLManager::CreatePrefilteredMap()
     _prefilteredMap = GET_SINGLE(Resources)->Get<Texture>(L"PrefilteredMap");
     shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"IBL_Prefilter");
 
-    assert(_environmentMap != nullptr);
-    assert(_prefilteredMap != nullptr);
-    assert(material != nullptr);
+    assert(_environmentMap);
+    assert(_prefilteredMap);
+    assert(material);
 
     material->SetTexture(0, _environmentMap);
 
     ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
 
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _prefilteredMap->GetTex2D().Get(),
         D3D12_RESOURCE_STATE_COMMON,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -183,22 +181,29 @@ void IBLManager::CreatePrefilteredMap()
 
     const uint32 baseSize = _prefilteredMap->GetWidth();
     const uint32 mipLevels = _prefilteredMap->GetMipLevels();
+
     const float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 
     for (uint32 mip = 0; mip < mipLevels; ++mip)
     {
         const uint32 mipSize = max(1u, baseSize >> mip);
+
         const float roughness = static_cast<float>(mip) / static_cast<float>(max(mipLevels - 1, 1u));
 
-        D3D12_VIEWPORT viewport = {};
-        viewport.Width = static_cast<float>(mipSize);
-        viewport.Height = static_cast<float>(mipSize);
-        viewport.MinDepth = 0.f;
-        viewport.MaxDepth = 1.f;
+        D3D12_VIEWPORT viewport =
+        {
+            0.f, 0.f,
+            static_cast<float>(mipSize),
+            static_cast<float>(mipSize),
+            0.f, 1.f
+        };
 
-        D3D12_RECT scissor = {};
-        scissor.right = static_cast<LONG>(mipSize);
-        scissor.bottom = static_cast<LONG>(mipSize);
+        D3D12_RECT scissor =
+        {
+            0, 0,
+            static_cast<LONG>(mipSize),
+            static_cast<LONG>(mipSize)
+        };
 
         cmdList->RSSetViewports(1, &viewport);
         cmdList->RSSetScissorRects(1, &scissor);
@@ -207,23 +212,22 @@ void IBLManager::CreatePrefilteredMap()
         {
             uint32 directionFace = face;
 
-            if (face == 2)
-                directionFace = 3;
-            else if (face == 3)
-                directionFace = 2;
+            //if (face == 2) directionFace = 3;
+            //else if (face == 3) directionFace = 2;
 
-            IBLCubemapParams cubeParams = {};
-            cubeParams.cubeFaceIndex = directionFace;
-            cubeParams.roughness = roughness;
+            IBLCubemapParams params = {};
+            params.cubeFaceIndex = directionFace;
+            params.roughness = roughness;
 
-            GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->PushGraphicsData(&cubeParams, sizeof(cubeParams));
-
-            D3D12_CPU_DESCRIPTOR_HANDLE rtv = _prefilteredMap->GetRTVHandle(face, mip);
+            auto rtv = _prefilteredMap->GetRTVHandle(face, mip);
 
             cmdList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
             cmdList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 
             material->PushGraphicsData();
+
+            GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->PushGraphicsData(&params, sizeof(params));
+            GDEngine->GetGraphicsDescHeap()->CommitTable();
 
             cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             cmdList->DrawInstanced(3, 1, 0, 0);
@@ -243,35 +247,31 @@ void IBLManager::CreateBRDFLUT()
     _brdfLUT = GET_SINGLE(Resources)->Get<Texture>(L"BRDFLUT");
     shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"IBL_BRDFLUT");
 
-    assert(_brdfLUT != nullptr);
-    assert(_brdfLUT->GetTex2D() != nullptr);
-    assert(material != nullptr);
+    assert(_brdfLUT);
+    assert(material);
 
     ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
 
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+    auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _brdfLUT->GetTex2D().Get(),
         D3D12_RESOURCE_STATE_COMMON,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     cmdList->ResourceBarrier(1, &barrier);
 
-    constexpr uint32 lutSize = 512;
+    D3D12_VIEWPORT viewport =
+    {
+        0.f, 0.f,
+        512.f, 512.f,
+        0.f, 1.f
+    };
 
-    D3D12_VIEWPORT viewport = {};
-    viewport.Width = static_cast<float>(lutSize);
-    viewport.Height = static_cast<float>(lutSize);
-    viewport.MinDepth = 0.f;
-    viewport.MaxDepth = 1.f;
-
-    D3D12_RECT scissor = {};
-    scissor.right = lutSize;
-    scissor.bottom = lutSize;
+    D3D12_RECT scissor = { 0, 0, 512, 512 };
 
     cmdList->RSSetViewports(1, &viewport);
     cmdList->RSSetScissorRects(1, &scissor);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv = _brdfLUT->GetRTVHandle();
+    auto rtv = _brdfLUT->GetRTVHandle();
 
     const float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 
@@ -280,7 +280,10 @@ void IBLManager::CreateBRDFLUT()
 
     material->PushGraphicsData();
 
+    GDEngine->GetGraphicsDescHeap()->CommitTable();
+
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
     cmdList->DrawInstanced(3, 1, 0, 0);
 
     barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -290,4 +293,3 @@ void IBLManager::CreateBRDFLUT()
 
     cmdList->ResourceBarrier(1, &barrier);
 }
-
