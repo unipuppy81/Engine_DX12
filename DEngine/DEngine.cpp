@@ -33,6 +33,7 @@ void DEngine::Init(const WindowInfo& info)
 	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b4, sizeof(IBLCubemapParams), IBLConfig::CubemapCBCount);
+	CreateConstantBuffer(CBV_REGISTER::b5, sizeof(CameraParams), 1);
 
 	CreateRenderTargetGroups();
 

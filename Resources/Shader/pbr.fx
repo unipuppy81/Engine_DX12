@@ -252,16 +252,19 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
     float3 N_view = normalize(viewNormal);
     
     //// Cubemap은 World 방향으로 샘플링
-    float3 N_world = normalize(mul(float4(N_view, 0.f), g_matViewInv).xyz);
-    float3 V_world = normalize(mul(float4(V_view, 0.f), g_matViewInv).xyz);
+    //float3 N_world = normalize(mul(float4(N_view, 0.f), g_matViewInv).xyz);
+    //float3 V_world = normalize(mul(float4(V_view, 0.f), g_matViewInv).xyz);
     
-    float NdotV = saturate(dot(N_world, V_world));
+    
+    float3 N_world = normalize(mul(float4(N_view, 0.f), g_cameraViewInv).xyz);
+    float3 V_world = normalize(mul(float4(V_view, 0.f), g_cameraViewInv).xyz);
     float3 R_world = reflect(-V_world, N_world);
     
+    float NdotV = saturate(dot(N_world, V_world));
+    // float3 R_world = reflect(-V_world, N_world);
+    
     float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
-
     float3 F = FresnelSchlick(NdotV, F0);
-
     float3 kS = F;
     float3 kD = (1.f - kS) * (1.f - metallic);
 
@@ -271,11 +274,9 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
 
     // Specular IBL
     const float maxMipLevel = 4.f;
-
     float3 prefilteredColor = g_prefilteredMap.SampleLevel(g_sam_0, R_world, roughness * maxMipLevel).rgb;
-
     float2 brdf = g_brdfLUT.Sample(g_sam_0, float2(NdotV, roughness)).rg;
-
+    
     float3 specularIBL = prefilteredColor * (F * brdf.x + brdf.y);
     float3 ambient = (kD * diffuseIBL + specularIBL) * ao;
     float3 result = directDiffuse + directSpecular + ambient;

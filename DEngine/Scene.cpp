@@ -130,6 +130,17 @@ void Scene::RenderLights()
 
 void Scene::RenderFinal()
 {
+	shared_ptr<Camera> mainCamera = _cameras[0];
+
+	CameraParams cameraParams = {};
+	cameraParams.matView = mainCamera->GetViewMatrix();
+	cameraParams.matProjection = mainCamera->GetProjectionMatrix();
+	cameraParams.matViewInv = cameraParams.matView.Invert();
+
+	CONST_BUFFER(CONSTANT_BUFFER_TYPE::CAMERA)->PushGraphicsData(&cameraParams, sizeof(CameraParams));
+
+
+
 	// Swapchain OMSet
 	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
 	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);

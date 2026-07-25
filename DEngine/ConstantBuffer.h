@@ -7,6 +7,7 @@ enum class CONSTANT_BUFFER_TYPE : uint8
 	MATERIAL,
 	MATERIAL_PBR,
 	IBL_CUBEMAP,
+	CAMERA,
 	// ...
 	END
 };

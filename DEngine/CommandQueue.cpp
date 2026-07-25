@@ -94,6 +94,7 @@ void GraphicsCommandQueue::RenderBegin()
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CAMERA)->Clear();
 
 	GDEngine->GetGraphicsDescHeap()->Clear();
 

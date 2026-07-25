@@ -79,6 +79,13 @@ cbuffer PBR_MATERIAL_PARAMS : register(b3)
     float g_padding;
 };
 
+cbuffer CAMERA_PARAMS : register(b5)
+{
+    row_major matrix g_cameraView;
+    row_major matrix g_cameraProjection;
+    row_major matrix g_cameraViewInv;
+};
+
 Texture2D g_tex_0 : register(t0); // SRV slot 0
 Texture2D g_tex_1 : register(t1); // SRV slot 1
 Texture2D g_tex_2 : register(t2); // SRV slot 2

@@ -86,6 +86,7 @@ enum class CBV_REGISTER : uint8
 	b2,
 	b3,
 	b4,
+	b5,
 
 	END
 };
@@ -205,6 +206,13 @@ struct IBLCubemapParams
 	float	roughness;
 	uint32	sampleCount;
 	float	padding;
+};
+
+struct CameraParams
+{
+	Matrix matView;
+	Matrix matProjection;
+	Matrix matViewInv;
 };
 
 extern unique_ptr<class DEngine> GDEngine;
