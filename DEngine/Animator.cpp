@@ -59,7 +59,7 @@ void Animator::PushData()
 	_computeMaterial->Dispatch(groupCount, 1, 1);
 
 	// Graphics Shader
-	_boneFinalMatrix->PushGraphicsData(SRV_REGISTER::t7);
+	_boneFinalMatrix->PushGraphicsData(SRV_REGISTER::t9);
 }
 
 void Animator::Play(uint32 idx)

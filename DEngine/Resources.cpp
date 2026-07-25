@@ -964,7 +964,7 @@ void Resources::CreateDefaultMaterial()
 
 		// PBR 상수값
 		material->SetPBRBaseColor(Vec4(1.f, 1.f, 1.f, 1.f));
-		material->SetPBRMetallic(0.0f);
+		material->SetPBRMetallic(0.1f);
 		material->SetPBRRoughness(0.5f);
 		material->SetPBRAO(1.0f);
 
@@ -1058,8 +1058,16 @@ void Resources::CreateDefaultMaterial()
 		material->SetTexture(2, GET_SINGLE(Resources)->Get<Texture>(L"SpecularLightTarget"));
 		material->SetTexture(3, GET_SINGLE(Resources)->Get<Texture>(L"MaterialInfoTarget"));
 
+		// IBL 계산에 필요한 GBuffer
+		material->SetTexture(4, Get<Texture>(L"PositionTarget"));
+		material->SetTexture(5, Get<Texture>(L"NormalTarget"));
+
+		// IBL 데이터
+		material->SetTexture(6, Get<Texture>(L"IrradianceMap"));
+		material->SetTexture(7, Get<Texture>(L"PrefilteredMap"));
+		material->SetTexture(8, Get<Texture>(L"BRDFLUT"));
+
 		Add<Material>(L"PBR_Final", material);
-		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
 	}
 
 	// Equirectangular HDR 2D -> Environment Cubemap

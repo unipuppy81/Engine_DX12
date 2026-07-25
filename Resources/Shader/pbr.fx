@@ -61,8 +61,8 @@ PS_PBR_OUT PS_PBR(VS_PBR_OUT input)
     // y = roughness
     // z = ao
     // w = shadingModel, 1 = PBR
-    output.materialInfo = float4(g_metallic, g_roughness, g_ao, 1.f);
-    
+    //output.materialInfo = float4(g_metallic, g_roughness, g_ao, 1.f);
+    output.materialInfo = float4(1.f, 0.f, 1.f, 1.f);
     return output;
 }
 
@@ -123,17 +123,17 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     if (shadingModel < 0.5f)
         clip(-1);
     
-    //float metallic = saturate(materialInfo.x);
-    //float roughness = max(saturate(materialInfo.y), 0.04f);
-    //float ao = saturate(materialInfo.z);
-    //float lightIntensity = 1.0f;
+    float metallic = saturate(materialInfo.x);
+    float roughness = max(saturate(materialInfo.y), 0.04f);
+    float ao = saturate(materialInfo.z);
+    float lightIntensity = 1.0f;
     
     
     // 비금속
-    float metallic = 0.0f;
-    float roughness = 0.4f;
-    float ao = 1.f;
-    float lightIntensity = 5.0f;
+    //float metallic = 0.0f;
+    //float roughness = 0.4f;
+    //float ao = 1.f;
+    //float lightIntensity = 5.0f;
     
     // 금속
     // float metallic = 0.9f;
@@ -168,7 +168,7 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     diffusePBR *= ao;
     
 // ============================================================
-// Temporary Ambient IBL
+//  Ambient IBL
 // ============================================================
     {
         // F0 계산
@@ -184,19 +184,8 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
         float3 kD = 1.f - kS;
         kD *= 1.f - metallic;
 
-        // 아직 Cubemap IBL이 없으므로 상수 환경광으로 대체
-        // float3 ambientColor = float3(0.03f, 0.03f, 0.03f);
-        // float3 ambient = kD * albedo * ambientColor * ao;
-        // 
-        // output.diffuse = float4(diffusePBR + ambient, 1.f);
-        // output.specular = float4(specularPBR, 1.f);
-        
-        float3 specularAmbientColor = float3(0.02f, 0.02f, 0.02f);
-        float3 specularAmbient = F * specularAmbientColor * ao;
-        
-        output.diffuse = float4(diffusePBR /*+ ambient*/, 1.f);
-        output.specular = float4(specularPBR + specularAmbient, 1.f);
-        
+        output.diffuse = float4(diffusePBR, 1.f);
+        output.specular = float4(specularPBR, 1.f);
         return output;
     }
     
@@ -239,35 +228,62 @@ VS_SCREEN_OUT VS_Final(VS_SCREEN_IN input)
 
 float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
 {
-    // PBR_Final Material 기준:
-    // g_tex_0 = DiffuseTarget / Albedo
-    // g_tex_1 = DiffuseLightTarget
-    // g_tex_2 = SpecularLightTarget
-    // g_tex_3 = MaterialInfoTarget
-
-    float4 color = g_tex_0.Sample(g_sam_0, input.uv);
-    float4 lightPower = g_tex_1.Sample(g_sam_0, input.uv);
-    float4 specular = g_tex_2.Sample(g_sam_0, input.uv);
+    float3 albedo = g_tex_0.Sample(g_sam_0, input.uv).rgb;
+    float3 directDiffuse = g_tex_1.Sample(g_sam_0, input.uv).rgb;
+    float3 directSpecular = g_tex_2.Sample(g_sam_0, input.uv).rgb;
     float4 materialInfo = g_tex_3.Sample(g_sam_0, input.uv);
-
-    if (lightPower.x == 0.f && lightPower.y == 0.f && lightPower.z == 0.f &&
-        specular.x == 0.f && specular.y == 0.f && specular.z == 0.f)
-    {
-        clip(-1);
-    }
 
     float shadingModel = materialInfo.w;
 
-    if (shadingModel >= 0.5f)
-    {
-        // PBR
-        return lightPower + specular;
-    }
-    else
-    {
-        // Phong
-        return (color * lightPower) + specular;
-    }
+    if (shadingModel < 0.5f)
+        return float4(albedo * directDiffuse + directSpecular, 1.f);
+
+    float metallic = saturate(materialInfo.x);
+    float roughness = max(saturate(materialInfo.y), 0.04f);
+    float ao = saturate(materialInfo.z);
+
+    float3 viewPos = g_positionTarget.Sample(g_sam_0, input.uv).xyz;
+    float3 viewNormal = normalize(g_normalTarget.Sample(g_sam_0, input.uv).xyz);
+
+    
+
+    //// View 공간에서 카메라는 원점
+    float3 V_view = normalize(-viewPos);
+    float3 N_view = normalize(viewNormal);
+    
+    //// Cubemap은 World 방향으로 샘플링
+    float3 N_world = normalize(mul(float4(N_view, 0.f), g_matViewInv).xyz);
+    float3 V_world = normalize(mul(float4(V_view, 0.f), g_matViewInv).xyz);
+    
+    float NdotV = saturate(dot(N_world, V_world));
+    float3 R_world = reflect(-V_world, N_world);
+    
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+
+    float3 F = FresnelSchlick(NdotV, F0);
+
+    float3 kS = F;
+    float3 kD = (1.f - kS) * (1.f - metallic);
+
+    // Diffuse IBL
+    float3 irradiance = g_irradianceMap.Sample(g_sam_0, N_world).rgb;
+    float3 diffuseIBL = irradiance * albedo;
+
+    // Specular IBL
+    const float maxMipLevel = 4.f;
+
+    float3 prefilteredColor = g_prefilteredMap.SampleLevel(g_sam_0, R_world, roughness * maxMipLevel).rgb;
+
+    float2 brdf = g_brdfLUT.Sample(g_sam_0, float2(NdotV, roughness)).rg;
+
+    float3 specularIBL = prefilteredColor * (F * brdf.x + brdf.y);
+    float3 ambient = (kD * diffuseIBL + specularIBL) * ao;
+    float3 result = directDiffuse + directSpecular + ambient;
+
+    result = result / (result + 1.f);
+    result = pow(result, 1.f / 2.2f);
+    return float4(prefilteredColor, 1.f);
+    return float4(result, 1.f);
 }
 
 #endif

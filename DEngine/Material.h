@@ -1,12 +1,14 @@
 #pragma once
 #include "Object.h"
+#include "EnginePch.h"
 
 class Shader;
 class Texture;
 
 enum
 {
-	MATERIAL_ARG_COUNT = 4,
+	MATERIAL_ARG_COUNT = 4,							// int/float/vec/matrix 
+	MATERIAL_TEXTURE_COUNT = SRV_REGISTER_COUNT,	// ÇöÀç 10
 };
 
 struct MaterialParams
@@ -49,8 +51,13 @@ public:
 	void SetFloat(uint8 index, float value) { _params.SetFloat(index, value); }
 	void SetTexture(uint8 index, shared_ptr<Texture> texture)
 	{
+		assert(index < _textures.size());
 		_textures[index] = texture;
-		_params.SetTexOn(index, texture == nullptr ? 0 : 1);
+
+		if (index < MATERIAL_ARG_COUNT) // t0~t3¸¸
+		{
+			_params.SetTexOn(index, texture ? 1 : 0);
+		}
 	}
 
 	void SetVec2(uint8 index, Vec2 value) { _params.SetVec2(index, value); }
@@ -75,7 +82,7 @@ private:
 	PBRMaterialParams	_pbrParams;
 	IBLCubemapParams	_cubeCapParams;
 
-	array<shared_ptr<Texture>, MATERIAL_ARG_COUNT> _textures;
+	array<shared_ptr<Texture>, MATERIAL_TEXTURE_COUNT> _textures;
 
 };
 

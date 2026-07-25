@@ -134,8 +134,8 @@ void Scene::RenderFinal()
 	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
 	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
 
-	GET_SINGLE(Resources)->Get<Material>(L"Final")->PushGraphicsData();
-	//GET_SINGLE(Resources)->Get<Material>(L"PBR_Final")->PushGraphicsData();
+	//GET_SINGLE(Resources)->Get<Material>(L"Final")->PushGraphicsData();
+	GET_SINGLE(Resources)->Get<Material>(L"PBR_Final")->PushGraphicsData();
 	GET_SINGLE(Resources)->Get<Mesh>(L"Rectangle")->Render();
 }
 

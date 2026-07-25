@@ -83,12 +83,17 @@ Texture2D g_tex_0 : register(t0); // SRV slot 0
 Texture2D g_tex_1 : register(t1); // SRV slot 1
 Texture2D g_tex_2 : register(t2); // SRV slot 2
 Texture2D g_tex_3 : register(t3); // SRV slot 3
-Texture2D g_tex_4 : register(t4); // SRV slot 4
 
-StructuredBuffer<Matrix> g_mat_bone : register(t7);
+Texture2D<float4> g_positionTarget : register(t4);
+Texture2D<float4> g_normalTarget : register(t5);
+
+TextureCube<float4> g_irradianceMap : register(t6);
+TextureCube<float4> g_prefilteredMap : register(t7);
+Texture2D<float2> g_brdfLUT : register(t8);
+
+StructuredBuffer<Matrix> g_mat_bone : register(t9);
 
 SamplerState g_sam_0 : register(s0);
-
 
 
 #endif
