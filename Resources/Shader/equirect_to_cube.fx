@@ -1,7 +1,10 @@
 #ifndef _EQUIRECT_TO_CUBE_FX_
 #define _EQUIRECT_TO_CUBE_FX_
 
-#include "params.fx"
+#include "ibl_params.fx"
+
+// Input : Equirect HDR 2D Texture
+Texture2D g_equirectMap : register(t0);
 
 struct VS_OUT
 {
@@ -21,9 +24,8 @@ VS_OUT VS_Main(uint vertexID : SV_VertexID)
     };
 
     float2 pos = positions[vertexID];
-
     output.pos = float4(pos, 0.f, 1.f);
-    output.screenUV = pos * 0.5f + 0.5f;
+    output.screenUV = pos * 0.5f + 0.5f;        // Clip Space 좌표를 UV 형태로 변환
 
     return output;
 }
@@ -34,7 +36,6 @@ float3 GetCubeDirection(int faceIndex, float2 uv)
     float2 p = uv * 2.f - 1.f;
 
     // 화면 좌표계 보정
-    // uv.y = 0 이 위쪽이므로 y를 뒤집어서 +Y가 위로 가게 함
     float u = p.x;
     float v = -p.y;
 
@@ -67,10 +68,10 @@ float2 SampleSphericalMap(float3 v)
 
 float4 PS_Main(VS_OUT input) : SV_Target
 {
-    // 최종 HDR 샘플링
     float3 dir = GetCubeDirection(g_cubeFaceIndex, input.screenUV);
     float2 uv = SampleSphericalMap(dir);
-    float3 color = g_tex_0.Sample(g_sam_0, uv).rgb;
+    float3 color = g_equirectMap.Sample(g_linearSampler, uv).rgb;
+
     return float4(color, 1.f);
 }
 

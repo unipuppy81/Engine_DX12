@@ -15,6 +15,9 @@ public:
 	void Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChain> swapChain);
 	void WaitSync();
 
+	void BeginInitCommands();
+	void EndInitCommands();
+
 	void RenderBegin();
 	void RenderEnd();
 

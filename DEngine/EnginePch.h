@@ -199,11 +199,12 @@ struct AnimFrameParams
 	Vec4	translation;
 };
 
-struct CubeCaptureParams
+struct IBLCubemapParams
 {
-	int32	cubeFaceIndex;
+	uint32	cubeFaceIndex;
 	float	roughness;
-	Vec2	padding;
+	uint32	sampleCount;
+	float	padding;
 };
 
 extern unique_ptr<class DEngine> GDEngine;
@@ -219,4 +220,21 @@ string ws2s(const wstring& s);
     std::wstringstream ss;                             \
     ss << x;                                           \
     ::OutputDebugStringW((ss.str() + L"\n").c_str());  \
+}
+
+
+// IBL Data 
+namespace IBLConfig
+{
+	constexpr uint32 CubemapFaceCount = 6;
+
+	constexpr uint32 EnvironmentSize = 512;
+	constexpr uint32 IrradianceSize = 32;
+
+	constexpr uint32 PrefilterSize = 128;
+	constexpr uint32 PrefilterMipLevels = 5;
+
+	constexpr uint32 BRDFLUTSize = 512;
+
+	constexpr uint32 CubemapCBCount = CubemapFaceCount + CubemapFaceCount + CubemapFaceCount * PrefilterMipLevels;
 }

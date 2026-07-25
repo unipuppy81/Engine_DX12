@@ -225,7 +225,7 @@ void Scene::ConvertHDRToCube_Test()
 	assert(envCube != nullptr);
 	assert(envCube->GetTex2D() != nullptr);
 
-	shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"EquirectToCube");
+	shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"IBL_Environment");
 	assert(material != nullptr);
 
 	shared_ptr<Mesh> cubeMesh = GET_SINGLE(Resources)->LoadCubeMesh();
@@ -270,11 +270,10 @@ void Scene::ConvertHDRToCube_Test()
 		else if (face == 3)
 			srcFace = 2;
 
-		CubeCaptureParams cubeParams = {};
+		IBLCubemapParams cubeParams = {};
 		cubeParams.cubeFaceIndex = static_cast<int32>(srcFace);
 
-		GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CUBE_CAPTURE)
-			->PushGraphicsData(&cubeParams, sizeof(cubeParams));
+		GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->PushGraphicsData(&cubeParams, sizeof(cubeParams));
 
 		D3D12_CPU_DESCRIPTOR_HANDLE rtv = envCube->GetRTVHandle(face);
 

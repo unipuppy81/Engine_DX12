@@ -152,13 +152,8 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 }
 
 
-void Texture::CreateCubeMap(
-	DXGI_FORMAT format,
-	uint32 size,
-	uint32 mipLevels,
-	const D3D12_HEAP_PROPERTIES& heapProperty,
-	D3D12_HEAP_FLAGS heapFlags,
-	D3D12_RESOURCE_FLAGS resFlags)
+void Texture::CreateCubeMap(DXGI_FORMAT format, uint32 size, uint32 mipLevels,
+	const D3D12_HEAP_PROPERTIES& heapProperty,	D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags)
 {
 	// CubeMap = Texture2D Array 6개
 	_desc = CD3DX12_RESOURCE_DESC::Tex2D(
@@ -204,7 +199,7 @@ void Texture::CreateCubeMap(
 	// RTV Heap 생성: CubeMap face 6개
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.NumDescriptors = 6;
+	rtvHeapDesc.NumDescriptors = 6 * _desc.MipLevels;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 	hr = DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&_rtvHeap));
@@ -215,21 +210,24 @@ void Texture::CreateCubeMap(
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = _rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-	for (uint32 i = 0; i < 6; i++)
+	for (uint32 mip = 0; mip < _desc.MipLevels; ++mip)
 	{
-		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-		rtvDesc.Format = _desc.Format;
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-		rtvDesc.Texture2DArray.MipSlice = 0;
-		rtvDesc.Texture2DArray.FirstArraySlice = i;
-		rtvDesc.Texture2DArray.ArraySize = 1;
+		for (uint32 face = 0; face < 6; ++face)
+		{
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+			rtvDesc.Format = _desc.Format;
+			rtvDesc.ViewDimension =
+				D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
 
-		DEVICE->CreateRenderTargetView(
-			_tex2D.Get(),
-			&rtvDesc,
-			rtvHandle);
+			rtvDesc.Texture2DArray.MipSlice = mip;
+			rtvDesc.Texture2DArray.FirstArraySlice = face;
+			rtvDesc.Texture2DArray.ArraySize = 1;
+			rtvDesc.Texture2DArray.PlaneSlice = 0;
 
-		rtvHandle.ptr += rtvDescriptorSize;
+			DEVICE->CreateRenderTargetView(_tex2D.Get(), &rtvDesc, rtvHandle);
+
+			rtvHandle.ptr += rtvDescriptorSize;
+		}
 	}
 }
 

@@ -9,6 +9,8 @@ enum class SHADER_TYPE : uint8
 	PARTICLE,
 	COMPUTE,
 	SHADOW,
+	IBL_CUBEMAP,
+	IBL_BRDF,
 };
 
 enum class RASTERIZER_TYPE : uint8

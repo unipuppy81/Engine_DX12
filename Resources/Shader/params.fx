@@ -79,13 +79,6 @@ cbuffer PBR_MATERIAL_PARAMS : register(b3)
     float g_padding;
 };
 
-cbuffer CUBE_CAPTURE_PARAMS : register(b4)
-{
-    int g_cubeFaceIndex;
-    float g_cubeRoughness;
-    float2 g_cubePadding;
-};
-
 Texture2D g_tex_0 : register(t0); // SRV slot 0
 Texture2D g_tex_1 : register(t1); // SRV slot 1
 Texture2D g_tex_2 : register(t2); // SRV slot 2

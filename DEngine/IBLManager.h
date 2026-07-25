@@ -10,9 +10,8 @@ class IBLManager
 public:
 	void Init();
 
-
 private:
-	void HDRToEnvironmentCube();
+	void CreateEnvironmentCube();
 	void CreateIrradianceMap();
 	void CreatePrefilteredMap();
 	void CreateBRDFLUT();

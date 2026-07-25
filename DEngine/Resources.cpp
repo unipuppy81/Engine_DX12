@@ -6,6 +6,7 @@
 void Resources::Init()
 {
 	CreateDefaultShader();
+	CreateDefaultTexture();
 	CreateDefaultMaterial();
 }
 
@@ -315,15 +316,7 @@ shared_ptr<Texture> Resources::CreateCubeMap(const wstring& key, DXGI_FORMAT for
 	uint32 size, uint32 mipLevels, D3D12_RESOURCE_FLAGS flags)
 {
 	shared_ptr<Texture> texture = make_shared<Texture>();
-
-	texture->CreateCubeMap(
-		format,
-		size,
-		mipLevels,
-		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		flags);
-
+	texture->CreateCubeMap(format, size, mipLevels, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, flags);
 	Add<Texture>(key, texture);
 
 	return texture;
@@ -721,11 +714,11 @@ void Resources::CreateDefaultShader()
 		Add<Shader>(L"SkyboxCube", shader);
 	}
 
-	// Equirectangular HDR 2D -> Cubemap
+	// Environment CubeMap
 	{
 		ShaderInfo info =
 		{
-			SHADER_TYPE::FORWARD,
+			SHADER_TYPE::IBL_CUBEMAP,
 			RASTERIZER_TYPE::CULL_NONE,
 			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
 		};
@@ -741,14 +734,14 @@ void Resources::CreateDefaultShader()
 
 		shared_ptr<Shader> shader = make_shared<Shader>();
 		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\equirect_to_cube.fx", info, arg);
-		Add<Shader>(L"EquirectToCube", shader);
+		Add<Shader>(L"IBL_Environment", shader);
 	}
 
-	// Irradiance Map
+	// Irradiance CubeMap
 	{
 		ShaderInfo info =
 		{
-			SHADER_TYPE::FORWARD,
+			SHADER_TYPE::IBL_CUBEMAP,
 			RASTERIZER_TYPE::CULL_NONE,
 			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
 		};
@@ -766,6 +759,52 @@ void Resources::CreateDefaultShader()
 		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\irradiance.fx", info, arg);
 		Add<Shader>(L"IBL_Irradiance", shader);
 	}
+
+	// Prefiltered CubeMap
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::IBL_CUBEMAP,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\prefilter.fx", info, arg);
+		Add<Shader>(L"IBL_Prefilter", shader);
+	}
+
+	// brdf lut
+	{
+		ShaderInfo info =
+		{
+			SHADER_TYPE::IBL_BRDF,
+			RASTERIZER_TYPE::CULL_NONE,
+			DEPTH_STENCIL_TYPE::NO_DEPTH_TEST_NO_WRITE
+		};
+
+		ShaderArg arg =
+		{
+			"VS_Main",
+			"",
+			"",
+			"",
+			"PS_Main"
+		};
+
+		shared_ptr<Shader> shader = make_shared<Shader>();
+		shader->CreateGraphicsShader(L"..\\Resources\\Shader\\brdflut.fx", info, arg);
+		Add<Shader>(L"IBL_BRDFLUT", shader);
+	}
 }
 
 void Resources::CreateDefaultTexture()
@@ -776,25 +815,33 @@ void Resources::CreateDefaultTexture()
 	CreateCubeMap(
 		L"EnvironmentCubeMap",
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
-		512,
-		1,
+		512, 1,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 	// Irradiance Map
 	CreateCubeMap(
 		L"IrradianceMap",
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
-		32,
-		1,
+		32, 1,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 	// Prefiltered Map
 	CreateCubeMap(
 		L"PrefilteredMap",
 		DXGI_FORMAT_R16G16B16A16_FLOAT,
-		128,
-		5,
+		128, 5,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+	// brdf lut
+	WindowInfo wInfo = GDEngine->GetWindow();
+	GET_SINGLE(Resources)->CreateTexture(
+		L"BRDFLUT",
+		DXGI_FORMAT_R16G16_FLOAT,
+		wInfo.height, wInfo.width,
+		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+	);
 }
 
 void Resources::CreateDefaultMaterial()
@@ -932,7 +979,6 @@ void Resources::CreateDefaultMaterial()
 		Add<Material>(L"Shadow", material);
 	}
 
-
 	// Tessellation
 	{
 		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"Tessellation");
@@ -1016,29 +1062,45 @@ void Resources::CreateDefaultMaterial()
 		assert(GET_SINGLE(Resources)->Get<Shader>(L"PBR_Final") != nullptr);
 	}
 
-	// Equirectangular HDR 2D -> Cubemap
+	// Equirectangular HDR 2D -> Environment Cubemap
 	{
-		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"EquirectToCube");
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"IBL_Environment");
 		shared_ptr<Texture> hdr = GET_SINGLE(Resources)->Get<Texture>(L"HDR_Studio");
 
 		assert(shader != nullptr);
 		assert(hdr != nullptr);
 
-		shared_ptr<Material> material = make_shared<Material>();
-		material->SetShader(shader);
-		material->SetTexture(0, hdr);
+		shared_ptr<Material> enviromentMaterial = make_shared<Material>();
+		enviromentMaterial->SetShader(shader);
+		enviromentMaterial->SetTexture(0, hdr);
 
-		Add<Material>(L"EquirectToCube", material);
+		Add<Material>(L"IBL_Environment", enviromentMaterial);
 	}
 
-	// CreateDefaultMaterial()
+	// Enviroment -> Irradiance
 	{
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"IBL_Irradiance");
 		shared_ptr<Material> irradianceMaterial = make_shared<Material>();
-		irradianceMaterial->SetShader(Get<Shader>(L"IBL_Irradiance"));
-		Add<Material>(L"IBL_Irradiance", irradianceMaterial);
+		irradianceMaterial->SetShader(shader);
 
+		Add<Material>(L"IBL_Irradiance", irradianceMaterial);
+	}
+
+	// Environment -> Prefilter
+	{
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"IBL_Prefilter");
 		shared_ptr<Material> prefilterMaterial = make_shared<Material>();
-		prefilterMaterial->SetShader(Get<Shader>(L"IBL_Prefilter"));
+		prefilterMaterial->SetShader(shader);
+
 		Add<Material>(L"IBL_Prefilter", prefilterMaterial);
+	}
+
+	// brdf lut
+	{
+		shared_ptr<Shader> shader = GET_SINGLE(Resources)->Get<Shader>(L"IBL_BRDFLUT");
+		shared_ptr<Material> prefilterMaterial = make_shared<Material>();
+		prefilterMaterial->SetShader(shader);
+
+		Add<Material>(L"IBL_BRDFLUT", prefilterMaterial);
 	}
 } 

@@ -45,8 +45,6 @@ void ConstantBuffer::CreateBuffer()
 		IID_PPV_ARGS(&_cbvBuffer));
 
 	_cbvBuffer->Map(0, nullptr, reinterpret_cast<void**>(&_mappedBuffer));
-	// We do not need to unmap until we are done with the resource.  However, we must not write to
-	// the resource while it is in use by the GPU (so we must use synchronization techniques).
 }
 
 void ConstantBuffer::CreateView()
@@ -59,6 +57,7 @@ void ConstantBuffer::CreateView()
 
 	// 시작 핸들
 	_cpuHandleBegin = _cbvHeap->GetCPUDescriptorHandleForHeapStart(); 
+
 	// 핸들별 간격 GetDescriptorHandleIncrementSize 로 가져와야 함(기계 성능에 따라)
 	_handleIncrementSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV); 
 

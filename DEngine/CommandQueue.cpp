@@ -51,6 +51,30 @@ void GraphicsCommandQueue::WaitSync()
 	}
 }
 
+void GraphicsCommandQueue::BeginInitCommands()
+{
+	_cmdAlloc->Reset();
+	_cmdList->Reset(_cmdAlloc.Get(), nullptr);
+
+	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
+
+	ID3D12DescriptorHeap* heap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
+
+	_cmdList->SetDescriptorHeaps(1, &heap);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear();
+
+	GDEngine->GetGraphicsDescHeap()->Clear();
+}
+
+void GraphicsCommandQueue::EndInitCommands()
+{
+	_cmdList->Close();
+
+	ID3D12CommandList* lists[] = { _cmdList.Get() };
+	_cmdQueue->ExecuteCommandLists(1, lists);
+
+	WaitSync();
+}
 
 void GraphicsCommandQueue::RenderBegin()
 {
@@ -69,7 +93,7 @@ void GraphicsCommandQueue::RenderBegin()
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->Clear();
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CUBE_CAPTURE)->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear();
 
 	GDEngine->GetGraphicsDescHeap()->Clear();
 

@@ -1,15 +1,9 @@
 #ifndef _PREFILTER_FX_
 #define _PREFILTER_FX_
 
-#include "params.fx"
+#include "ibl_params.fx"
 
 TextureCube<float4> g_environmentCubeMap : register(t0);
-
-cbuffer IBLPrefilterParams : register(b1)
-{
-    float g_roughnesss;
-    float3 g_prefilterPadding;
-};
 
 struct VS_OUT
 {
@@ -107,22 +101,22 @@ float4 PS_Main(VS_OUT input) : SV_Target
     float3 R = N;
     float3 V = R;
 
-    const uint sampleCount = 1024u;
-
+    uint sampleCount = (g_sampleCount > 0u) ? g_sampleCount : 1024u;
+    
     float3 prefilteredColor = float3(0.f, 0.f, 0.f);
     float totalWeight = 0.f;
 
     for (uint i = 0u; i < sampleCount; ++i)
     {
         float2 xi = Hammersley(i, sampleCount);
-        float3 H = ImportanceSampleGGX(xi, N, max(g_roughnesss, 0.001f));
+        float3 H = ImportanceSampleGGX(xi, N, max(g_cubeRoughness, 0.001f));
         float3 L = normalize(2.f * dot(V, H) * H - V);
 
         float NdotL = saturate(dot(N, L));
 
         if (NdotL > 0.f)
         {
-            float3 sampleColor = g_environmentCubeMap.SampleLevel(g_sam_0, L, 0.f).rgb;
+            float3 sampleColor = g_environmentCubeMap.SampleLevel(g_linearSampler, L, 0.f).rgb;
             prefilteredColor += sampleColor * NdotL;
             totalWeight += NdotL;
         }

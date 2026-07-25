@@ -10,6 +10,7 @@
 #include "Resources.h"
 #include "InstancingManager.h"
 #include "DiagnosticsManager.h"
+#include "IBLManager.h"
 
 void DEngine::Init(const WindowInfo& info)
 {
@@ -31,7 +32,7 @@ void DEngine::Init(const WindowInfo& info)
 	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
 	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 256);
-	CreateConstantBuffer(CBV_REGISTER::b4, sizeof(CubeCaptureParams), 6);
+	CreateConstantBuffer(CBV_REGISTER::b4, sizeof(IBLCubemapParams), IBLConfig::CubemapCBCount);
 
 	CreateRenderTargetGroups();
 
@@ -40,6 +41,12 @@ void DEngine::Init(const WindowInfo& info)
 	GET_SINGLE(Input)->Init(info.hwnd);
 	GET_SINGLE(Timer)->Init();
 	GET_SINGLE(Resources)->Init();
+
+	_graphicsCmdQueue->BeginInitCommands();
+	GET_SINGLE(IBLManager)->Init();
+	_graphicsCmdQueue->EndInitCommands();
+
+	GET_SINGLE(IBLManager)->Init();
 
 	// ImGui
 	GET_SINGLE(DiagnosticsManager)->Init();
@@ -90,7 +97,6 @@ void DEngine::Render()
 
 	GET_SINGLE(DiagnosticsManager)->UpdateGpuResult();
 }
-
 
 void DEngine::RenderBegin()
 {
