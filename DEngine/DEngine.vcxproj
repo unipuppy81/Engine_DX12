@@ -162,6 +162,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="d3dx12.h" />
+    <ClInclude Include="DeferredReleaseQueue.h" />
     <ClInclude Include="Device.h" />
     <ClInclude Include="DEngine.h" />
     <ClInclude Include="DiagnosticsManager.h" />
@@ -217,6 +218,7 @@
     <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="DeferredReleaseQueue.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="DEngine.cpp" />
     <ClCompile Include="DiagnosticsManager.cpp" />

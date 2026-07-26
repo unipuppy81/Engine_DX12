@@ -12,6 +12,39 @@
 #include "DiagnosticsManager.h"
 #include "IBLManager.h"
 
+DEngine::~DEngine()
+{
+	Shutdown();
+}
+
+void DEngine::Shutdown()
+{
+	if (_shutdown)
+		return;
+
+	_shutdown = true;
+
+	// 1. 실행 중인 GPU 작업 완료
+	if (_graphicsCmdQueue)
+		_graphicsCmdQueue->WaitSync();
+
+	if (_computeCmdQueue)
+		_computeCmdQueue->WaitSync();
+
+	// 2. GPU 리소스 소유 객체 제거
+	for (auto& group : _rtGroups)
+		group.reset();
+
+	_constantBuffers.clear();
+
+	// Resources, Scene, IBL이 Texture를 소유한다면
+	// 여기서 해당 관리자들의 Clear/Shutdown도 호출해야 함
+
+	// 3. Texture 소멸자가 등록한 Deferred Release 처리
+	if (_graphicsCmdQueue)
+		_graphicsCmdQueue->FlushDeferredReleases();
+}
+
 void DEngine::Init(const WindowInfo& info)
 {
 	_window = info;

@@ -21,6 +21,7 @@ public:
 		D3D12_RESOURCE_FLAGS resFlags);
 
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
+	void ReleaseGpuResources();
 
 public:
 	ComPtr<ID3D12Resource> GetTex2D() { return _tex2D; }

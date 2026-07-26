@@ -31,9 +31,9 @@ void ImGuiManager::Init(HWND hwnd)
     initInfo.DSVFormat = DXGI_FORMAT_UNKNOWN;
     initInfo.SrvDescriptorHeap = _descriptorHeap.Get();
 
-    initInfo.SrvDescriptorAllocFn =
-        [](ImGui_ImplDX12_InitInfo* info,
-            D3D12_CPU_DESCRIPTOR_HANDLE* outCpu,
+    initInfo.SrvDescriptorAllocFn = 
+        [](ImGui_ImplDX12_InitInfo* info, 
+            D3D12_CPU_DESCRIPTOR_HANDLE* outCpu, 
             D3D12_GPU_DESCRIPTOR_HANDLE* outGpu)
         {
             ID3D12DescriptorHeap* heap = info->SrvDescriptorHeap;
@@ -80,10 +80,7 @@ void ImGuiManager::Render()
     GRAPHICS_CMD_LIST->SetDescriptorHeaps(1, heaps);
 
     // ImGui DrawData ·»´õ¸µ
-    ImGui_ImplDX12_RenderDrawData(
-        ImGui::GetDrawData(),
-        GRAPHICS_CMD_LIST.Get()
-    );
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRAPHICS_CMD_LIST.Get());
 }
 
 void ImGuiManager::Shutdown()

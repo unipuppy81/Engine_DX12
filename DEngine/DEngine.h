@@ -16,6 +16,9 @@
 class DEngine
 {
 public:
+	~DEngine();
+	void Shutdown();
+
 	void Init(const WindowInfo& info);
 	void Update();
 	void LateUpdate();
@@ -48,6 +51,8 @@ private:
 	void CreateRenderTargetGroups();
 
 private:
+	bool _shutdown = false;
+
 	WindowInfo		_window;
 	D3D12_VIEWPORT	_viewport = {};
 	D3D12_RECT		_scissorRect = {};

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DeferredReleaseQueue.h"
+
 class SwapChain;
 class DescriptorHeap;
 
@@ -24,18 +26,24 @@ public:
 	void RenderEnd();
 
 	void FlushResourceCommandQueue();
+	void FlushDeferredReleases();
 
 	ComPtr<ID3D12CommandQueue> GetCmdQueue() { return _cmdQueue; }
 	ComPtr<ID3D12GraphicsCommandList>	GetGraphicsCmdList() { return _cmdList; }
 	ComPtr<ID3D12GraphicsCommandList>	GetResCmdList() { return _resCmdList; }
 
+	template<typename T>
+	void DeferredRelease(ComPtr<T>& resource)
+	{
+		_deferredReleaseQueue.Enqueue(resource);
+	}
+
 private:
 	ComPtr<ID3D12CommandQueue>			_cmdQueue;
 
-	// ComPtr<ID3D12CommandAllocator>		_cmdAlloc;
 	ComPtr<ID3D12CommandAllocator>		_resCmdAlloc;
-	ComPtr<ID3D12GraphicsCommandList>	_cmdList;
 	ComPtr<ID3D12GraphicsCommandList>	_resCmdList;
+	ComPtr<ID3D12GraphicsCommandList>	_cmdList;
 
 	ComPtr<ID3D12Fence>					_fence;
 	uint64								_fenceValue = 0;
@@ -46,6 +54,9 @@ private:
 	array<FrameResource, 2 >			_frames;
 	uint32								_currentFrameIndex = 0;
 	FrameResource*						_currentFrame = nullptr;
+
+	DeferredReleaseQueue				_deferredReleaseQueue;
+
 };
 
 // ************************

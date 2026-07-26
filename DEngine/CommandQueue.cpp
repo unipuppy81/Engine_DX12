@@ -3,13 +3,21 @@
 #include "SwapChain.h"
 #include "DEngine.h"
 
+
 #pragma region Graphics CommandQueue
 
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
-	::CloseHandle(_fenceEvent);
-}
+	if (_cmdQueue && _fence)
+		FlushDeferredReleases();
 
+	if (_fenceEvent != nullptr &&
+		_fenceEvent != INVALID_HANDLE_VALUE)
+	{
+		::CloseHandle(_fenceEvent);
+		_fenceEvent = nullptr;
+	}
+}
 void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChain> swapChain)
 {
 	_swapChain = swapChain;
@@ -110,6 +118,9 @@ void GraphicsCommandQueue::RenderBegin()
 	_currentFrame = &_frames[_currentFrameIndex];
 
 	WaitForFence(_currentFrame->fenceValue);
+	
+	// 완료된 Fence에 연결된 리소스 실제 해제
+	_deferredReleaseQueue.Process(_fence->GetCompletedValue());
 
 	_currentFrame->cmdAllocator->Reset();
 	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
@@ -140,10 +151,8 @@ void GraphicsCommandQueue::RenderBegin()
 
 void GraphicsCommandQueue::RenderEnd()
 {
-	int8 backIndex = _swapChain->GetBackBufferIndex();
-
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex)->GetTex2D().Get(),
+		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(_currentFrameIndex)->GetTex2D().Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, // 백 버퍼
 		D3D12_RESOURCE_STATE_PRESENT);		// 현재 출력
 
@@ -152,10 +161,19 @@ void GraphicsCommandQueue::RenderEnd()
 
 	ID3D12CommandList* cmdListArr[] = { _cmdList.Get() };
 
+	// 1. 명령 제출
 	_cmdQueue->ExecuteCommandLists(1, cmdListArr);
-	_currentFrame->fenceValue = Signal();
-	
+
+	// 2. Present
 	_swapChain->Present();
+	
+	// 3. 제출된 작업 이후에 Fence 삽입
+	const uint64 fenceValue = Signal();
+	_currentFrame->fenceValue = fenceValue;
+
+	// 4. 이번 프레임 삭제 요청을 Fence와 연결
+	_deferredReleaseQueue.Commit(fenceValue);
+
 	_swapChain->SwapIndex();
 }
 
@@ -170,6 +188,21 @@ void GraphicsCommandQueue::FlushResourceCommandQueue()
 
 	_resCmdAlloc->Reset();
 	_resCmdList->Reset(_resCmdAlloc.Get(), nullptr);
+}
+
+void GraphicsCommandQueue::FlushDeferredReleases()
+{
+	// 지금까지 Queue에 제출된 작업 뒤에 Fence 삽입
+	const uint64 fenceValue = Signal();
+
+	// 아직 RenderEnd에 연결되지 않은 해제 요청까지 Fence에 연결
+	_deferredReleaseQueue.Commit(fenceValue);
+
+	// GPU 완료 대기
+	WaitForFence(fenceValue);
+
+	// 실제 ComPtr 해제
+	_deferredReleaseQueue.Process(_fence->GetCompletedValue());
 }
 
 #pragma endregion

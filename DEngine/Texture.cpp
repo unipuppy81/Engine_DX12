@@ -9,7 +9,7 @@ Texture::Texture() : Object(OBJECT_TYPE::TEXTURE)
 
 Texture::~Texture()
 {
-
+	ReleaseGpuResources();
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 index)
@@ -39,6 +39,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 faceIndex, uint32 mipLe
 
 void Texture::Load(const wstring& path)
 {
+	ReleaseGpuResources();
+
 	// 파일 확장자 얻기
 	wstring ext = fs::path(path).extension();
 
@@ -74,23 +76,15 @@ void Texture::Load(const wstring& path)
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
 	ComPtr<ID3D12Resource> textureUploadHeap;
-	hr = DEVICE->CreateCommittedResource(
-		&heapProperty,
-		D3D12_HEAP_FLAG_NONE,
-		&desc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(textureUploadHeap.GetAddressOf()));
+	hr = DEVICE->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, 
+		&desc, D3D12_RESOURCE_STATE_GENERIC_READ, 
+		nullptr, IID_PPV_ARGS(textureUploadHeap.GetAddressOf()));
 
 	if (FAILED(hr))
 		assert(nullptr);
 
-	::UpdateSubresources(RESOURCE_CMD_LIST.Get(),
-		_tex2D.Get(),
-		textureUploadHeap.Get(),
-		0, 0,
-		static_cast<unsigned int>(subResources.size()),
-		subResources.data());
+	::UpdateSubresources(RESOURCE_CMD_LIST.Get(),_tex2D.Get(), textureUploadHeap.Get(),
+		0, 0, static_cast<unsigned int>(subResources.size()), subResources.data());
 
 	GDEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue();
 
@@ -305,4 +299,33 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 		srvDesc.Texture2D.MipLevels = 1;
 		DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
 	}
+}
+
+void Texture::ReleaseGpuResources()
+{
+	auto graphicsQueue = GDEngine->GetGraphicsCmdQueue();
+
+	if (graphicsQueue != nullptr)
+	{
+		// 실제 GPU 메모리
+		graphicsQueue->DeferredRelease(_tex2D);
+
+		// 현재 구조에서는 Descriptor Heap도 Texture가 소유하므로 같이 지연 해제
+		graphicsQueue->DeferredRelease(_srvHeap);
+		graphicsQueue->DeferredRelease(_rtvHeap);
+		graphicsQueue->DeferredRelease(_dsvHeap);
+		graphicsQueue->DeferredRelease(_uavHeap);
+	}
+	else
+	{
+		// 엔진 종료 순서상 Queue가 이미 사라졌다면 즉시 정리
+		_tex2D.Reset();
+		_srvHeap.Reset();
+		_rtvHeap.Reset();
+		_dsvHeap.Reset();
+		_uavHeap.Reset();
+	}
+
+	_srvHeapBegin = {};
+	_uavHeapBegin = {};
 }

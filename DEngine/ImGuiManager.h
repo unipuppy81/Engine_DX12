@@ -15,12 +15,7 @@ private:
 	void CreateDescriptorHeap();
 
 private:
-	void ShowFps();
 	void ShowPerformance();
-	void ShowRenderStats();
-	void ShowRenderMode();
-	void ShowRenderOptions();
-	void ShowRenderParameters();
 
 private:
 	ComPtr<ID3D12DescriptorHeap> _descriptorHeap;
