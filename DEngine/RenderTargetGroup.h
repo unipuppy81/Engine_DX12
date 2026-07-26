@@ -15,13 +15,14 @@ enum
 	RENDER_TARGET_SHADOW_GROUP_MEMBER_COUNT = 1,
 	RENDER_TARGET_G_BUFFER_GROUP_MEMBER_COUNT = 4,
 	RENDER_TARGET_LIGHTING_GROUP_MEMBER_COUNT = 2,
-	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
+	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END),
+	MAX_RENDER_TARGET_COUNT = 8,
 };
 
 struct RenderTarget
 {
 	shared_ptr<Texture> target;
-	float clearColor[4];
+	float clearColor[4] = {};
 };
 
 class RenderTargetGroup
@@ -42,19 +43,15 @@ public:
 	void WaitResourceToTarget();
 
 private:
-	RENDER_TARGET_GROUP_TYPE		_groupType;
-	vector<RenderTarget>			_rtVec;
-	uint32							_rtCount;
-	shared_ptr<Texture>				_dsTexture;
-	ComPtr<ID3D12DescriptorHeap>	_rtvHeap;
+	RENDER_TARGET_GROUP_TYPE			_groupType = {};
+	vector<RenderTarget>				_rtVec;
+	uint32								_rtCount;
+	shared_ptr<Texture>					_dsTexture;
 
-private:
-	uint32							_rtvHeapSize;
-	D3D12_CPU_DESCRIPTOR_HANDLE		_rtvHeapBegin;
-	D3D12_CPU_DESCRIPTOR_HANDLE		_dsvHeapBegin;
+	vector<D3D12_CPU_DESCRIPTOR_HANDLE> _rtvHandles;
+	D3D12_CPU_DESCRIPTOR_HANDLE			_dsvHandle = {};
 
-private:
-	D3D12_RESOURCE_BARRIER			_targetToResource[8];
-	D3D12_RESOURCE_BARRIER			_resourceToTarget[8];
+	D3D12_RESOURCE_BARRIER _targetToResource[MAX_RENDER_TARGET_COUNT] = {};
+	D3D12_RESOURCE_BARRIER _resourceToTarget[MAX_RENDER_TARGET_COUNT] = {};
 };
 

@@ -102,10 +102,13 @@ VS_TEX_OUT VS_Tex(VS_TEX_IN input)
 
 float4 PS_Tex(VS_TEX_OUT input) : SV_Target
 {
+    float4 sampled = g_tex_0.Sample(g_sam_0, input.uv);
+    return float4(sampled.rgb, 1.0f);
+    
     float4 color = float4(1.f, 1.f, 1.f, 1.f);
     if (g_tex_on_0)
         color = g_tex_0.Sample(g_sam_0, input.uv);
-
+    
     return color;
 }
 

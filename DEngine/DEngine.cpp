@@ -58,8 +58,15 @@ void DEngine::Init(const WindowInfo& info)
 
 	_swapChain->Init(info, _device->GetDevice(), _device->GetDXGI(), _graphicsCmdQueue->GetCmdQueue());
 	_rootSignature->Init();
+
+	// 프레임별 임시 Shader Visible Heap
 	_graphicsDescHeap->Init(256);
 	_computeDescHeap->Init();
+
+	// 정적 CPU Descriptor Heap
+	_resourceDescriptorAllocator->Init(_device->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 4096);
+	_rtvDescriptorAllocator->Init(_device->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2048);
+	_dsvDescriptorAllocator->Init(_device->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 512);
 
 	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
 	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);

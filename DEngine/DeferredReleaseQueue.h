@@ -9,6 +9,7 @@ private:
 	{
 		uint64 fenceValue = 0;
 		vector<ComPtr<IUnknown>> resources;
+		vector<function<void()>> callbacks;
 	};
 
 public:
@@ -27,9 +28,12 @@ public:
 		resource.Reset();
 
 		// Queue가 마지막 참조를 보관
-		_pendingResources.push_back(
-			std::move(unknownResource)
-		);
+		_pendingResources.push_back(std::move(unknownResource));
+	}
+
+	void EnqueueCallback(function<void()>&& callback)
+	{
+		_pendingCallbacks.push_back(std::move(callback));
 	}
 
 	void Commit(uint64 fenceValue);
@@ -40,5 +44,7 @@ public:
 
 private:
 	vector<ComPtr<IUnknown>> _pendingResources;
+	vector<function<void()>> _pendingCallbacks;
+
 	deque<ReleaseBatch> _releaseBatches;
 };

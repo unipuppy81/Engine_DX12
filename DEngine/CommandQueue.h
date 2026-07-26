@@ -4,6 +4,8 @@
 
 class SwapChain;
 class DescriptorHeap;
+class DescriptorAllocator;
+class DescriptorAllocation;
 
 // ************************
 // GraphicsCommandQueue
@@ -37,6 +39,8 @@ public:
 	{
 		_deferredReleaseQueue.Enqueue(resource);
 	}
+
+	void DeferredFreeDescriptor(shared_ptr<DescriptorAllocator> allocator, DescriptorAllocation& allocation);
 
 private:
 	ComPtr<ID3D12CommandQueue>			_cmdQueue;

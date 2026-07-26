@@ -205,6 +205,20 @@ void GraphicsCommandQueue::FlushDeferredReleases()
 	_deferredReleaseQueue.Process(_fence->GetCompletedValue());
 }
 
+void GraphicsCommandQueue::DeferredFreeDescriptor(shared_ptr<DescriptorAllocator> allocator, DescriptorAllocation& allocation)
+{
+	if (!allocation.IsValid())
+		return;
+
+	DescriptorAllocation releasedAllocation = allocation;
+	allocation.Reset();
+
+	_deferredReleaseQueue.EnqueueCallback(
+		[allocator, releasedAllocation]() mutable
+		{
+			allocator->Free(releasedAllocation);
+		});
+}
 #pragma endregion
 
 #pragma region Compute CommandQueue

@@ -329,6 +329,9 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 			material->SetShader(shader);
 			material->SetTexture(0, texture);
 			meshRenderer->SetMaterial(material);
+
+			DX_LOG(L"[UI] " << i << L" SRV Index: " << texture->GetSRVIndex());
+
 		}
 		obj->AddComponent(meshRenderer);
 		scene->AddGameObject(obj);

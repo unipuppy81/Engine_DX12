@@ -1,5 +1,6 @@
 #pragma once
 #include "Object.h"
+#include "DescriptorAllocator.h"
 
 class Texture : public Object
 {
@@ -12,43 +13,43 @@ public:
 		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 		D3D12_RESOURCE_FLAGS resFlags, Vec4 clearColor = Vec4());
 
-	void CreateCubeMap(
-		DXGI_FORMAT format,
-		uint32 size,
-		uint32 mipLevels,
-		const D3D12_HEAP_PROPERTIES& heapProperty,
-		D3D12_HEAP_FLAGS heapFlags,
+	void CreateCubeMap(DXGI_FORMAT format, uint32 size, uint32 mipLevels,
+		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 		D3D12_RESOURCE_FLAGS resFlags);
 
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
 	void ReleaseGpuResources();
 
+	uint32 GetSRVIndex() const
+	{
+		return _srvAllocation.startIndex;
+	}
+
 public:
 	ComPtr<ID3D12Resource> GetTex2D() { return _tex2D; }
-	ComPtr<ID3D12DescriptorHeap> GetSRV() { return _srvHeap; }
-	ComPtr<ID3D12DescriptorHeap> GetRTV() { return _rtvHeap; }
-	ComPtr<ID3D12DescriptorHeap> GetDSV() { return _dsvHeap; }
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle() { return _srvHeapBegin; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle() { return _uavHeapBegin; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle();
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(uint32 index = 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(uint32 faceIndex, uint32 mipLevel);
 
-	float GetWidth() { return static_cast<float>(_desc.Width); }
-	float GetHeight() { return static_cast<float>(_desc.Height); }
+	float GetWidth() const { return static_cast<float>(_desc.Width); }
+	float GetHeight() const { return static_cast<float>(_desc.Height); }
 	uint32 GetMipLevels() const { return static_cast<uint32>(_desc.MipLevels); }
 
 private:
+	void CreateDefaultViews();
+	void CreateCubeMapViews();
+
+private:
 	ScratchImage			 		_image;
-	D3D12_RESOURCE_DESC				_desc;
+	D3D12_RESOURCE_DESC				_desc = {};
 	ComPtr<ID3D12Resource>			_tex2D;
 
-	ComPtr<ID3D12DescriptorHeap>	_srvHeap;
-	ComPtr<ID3D12DescriptorHeap>	_rtvHeap;
-	ComPtr<ID3D12DescriptorHeap>	_dsvHeap;
-	ComPtr<ID3D12DescriptorHeap>	_uavHeap;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE		_srvHeapBegin = {};
-	D3D12_CPU_DESCRIPTOR_HANDLE		_uavHeapBegin = {};
+	DescriptorAllocation _srvAllocation;
+	DescriptorAllocation _uavAllocation;
+	DescriptorAllocation _rtvAllocation;
+	DescriptorAllocation _dsvAllocation;
 };
 

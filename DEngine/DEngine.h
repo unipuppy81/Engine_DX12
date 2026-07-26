@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "RenderTargetGroup.h"
 #include "ImGuiManager.h"
+#include "DescriptorAllocator.h"
 
 class DEngine
 {
@@ -35,8 +36,9 @@ public:
 
 	shared_ptr<ConstantBuffer> GetConstantBuffer(CONSTANT_BUFFER_TYPE type) { return _constantBuffers[static_cast<uint8>(type)]; }	
 	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type) { return _rtGroups[static_cast<uint8>(type)]; }
-
-	// uint32 GetRtvDescriptorSize() { return _rtvDescriptorSize; }
+	shared_ptr<DescriptorAllocator> GetResourceDescriptorAllocator() { return _resourceDescriptorAllocator; }
+	shared_ptr<DescriptorAllocator> GetRTVDescriptorAllocator() { return _rtvDescriptorAllocator; }
+	shared_ptr<DescriptorAllocator> GetDSVDescriptorAllocator() { return _dsvDescriptorAllocator; }
 
 public:
 	void Render();
@@ -68,5 +70,9 @@ private:
 
 	vector<shared_ptr<ConstantBuffer>> _constantBuffers;
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> _rtGroups;
+
+	shared_ptr<DescriptorAllocator> _resourceDescriptorAllocator = make_shared<DescriptorAllocator>();
+	shared_ptr<DescriptorAllocator> _rtvDescriptorAllocator = make_shared<DescriptorAllocator>();
+	shared_ptr<DescriptorAllocator> _dsvDescriptorAllocator = make_shared<DescriptorAllocator>();
 };
 

@@ -12,37 +12,154 @@ Texture::~Texture()
 	ReleaseGpuResources();
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetSRVHandle()
+{
+	assert(_srvAllocation.IsValid());
+	return GDEngine->GetResourceDescriptorAllocator()->GetCPUHandle(_srvAllocation);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetUAVHandle()
+{
+	assert(_uavAllocation.IsValid());
+	return GDEngine->GetResourceDescriptorAllocator()->GetCPUHandle(_uavAllocation);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetDSVHandle()
+{
+	assert(_dsvAllocation.IsValid());
+	return GDEngine->GetDSVDescriptorAllocator()->GetCPUHandle(_dsvAllocation);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 index)
 {
-	if (_rtvHeap == nullptr)
-	{
-		::OutputDebugStringW(L"[Texture::GetRTVHandle] _rtvHeap is nullptr\n");
-		assert(false);
-	}
-	
-	uint32 rtvDescriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->GetCPUDescriptorHandleForHeapStart(), index, rtvDescriptorSize);
+	assert(_rtvAllocation.IsValid());
+	assert(index < _rtvAllocation.count);
+	return GDEngine->GetRTVDescriptorAllocator()->GetCPUHandle(_rtvAllocation, index);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRTVHandle(uint32 faceIndex, uint32 mipLevel)
 {
-	assert(_rtvHeap != nullptr);
 	assert(faceIndex < 6);
 	assert(mipLevel < _desc.MipLevels);
 
-	uint32 descriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	uint32 descriptorIndex = mipLevel * 6 + faceIndex;
+	const uint32 index = mipLevel * 6 + faceIndex;
 
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->GetCPUDescriptorHandleForHeapStart(),descriptorIndex, descriptorSize);
+	return GetRTVHandle(index);
+}
+
+void Texture::CreateDefaultViews()
+{
+	assert(_tex2D != nullptr);
+
+	auto resourceAllocator = GDEngine->GetResourceDescriptorAllocator();
+	auto rtvAllocator = GDEngine->GetRTVDescriptorAllocator();
+	auto dsvAllocator = GDEngine->GetDSVDescriptorAllocator();
+
+	// Depth Texture는 현재 DSV만 생성
+	if (_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	{
+		_dsvAllocation = dsvAllocator->Allocate();
+		D3D12_CPU_DESCRIPTOR_HANDLE handle = dsvAllocator->GetCPUHandle(_dsvAllocation);
+		DEVICE->CreateDepthStencilView(_tex2D.Get(), nullptr, handle);
+
+		return;
+	}
+
+	// RTV
+	if (_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	{
+		_rtvAllocation = rtvAllocator->Allocate();
+		D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvAllocator->GetCPUHandle(_rtvAllocation);
+		DEVICE->CreateRenderTargetView(_tex2D.Get(), nullptr, handle);
+	}
+
+	// UAV
+	if (_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
+	{
+		_uavAllocation = resourceAllocator->Allocate();
+		D3D12_CPU_DESCRIPTOR_HANDLE handle = resourceAllocator->GetCPUHandle(_uavAllocation);
+
+		D3D12_UNORDERED_ACCESS_VIEW_DESC desc = {};
+		desc.Format = _desc.Format;
+		desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+
+		DEVICE->CreateUnorderedAccessView(_tex2D.Get(), nullptr, &desc, handle);
+	}
+
+	// SRV
+	_srvAllocation = resourceAllocator->Allocate();
+
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = resourceAllocator->GetCPUHandle(_srvAllocation);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = _desc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = _desc.MipLevels;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, srvHandle);
+}
+
+void Texture::CreateCubeMapViews()
+{
+	assert(_tex2D != nullptr);
+	assert(_desc.DepthOrArraySize == 6);
+
+	auto resourceAllocator = GDEngine->GetResourceDescriptorAllocator();
+	auto rtvAllocator = GDEngine->GetRTVDescriptorAllocator();
+
+	// Cubemap SRV
+	_srvAllocation = resourceAllocator->Allocate();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = _desc.Format;
+	srvDesc.ViewDimension =	D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = _desc.MipLevels;
+	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+
+	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, resourceAllocator->GetCPUHandle(_srvAllocation));
+
+	// Cubemap이 RenderTarget일 때만 RTV 생성
+	if (!(_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET))
+	{
+		return;
+	}
+
+	const uint32 rtvCount = 6 * static_cast<uint32>(_desc.MipLevels);
+	_rtvAllocation = rtvAllocator->Allocate(rtvCount);
+
+	for (uint32 mip = 0; mip < _desc.MipLevels; ++mip)
+	{
+		for (uint32 face = 0; face < 6; ++face)
+		{
+			const uint32 index = mip * 6 + face;
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+
+			rtvDesc.Format = _desc.Format;
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			rtvDesc.Texture2DArray.MipSlice = mip;
+			rtvDesc.Texture2DArray.FirstArraySlice = face;
+			rtvDesc.Texture2DArray.ArraySize = 1;
+			rtvDesc.Texture2DArray.PlaneSlice = 0;
+
+			D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvAllocator->GetCPUHandle(_rtvAllocation, index);
+			DEVICE->CreateRenderTargetView(_tex2D.Get(), &rtvDesc, handle);
+		}
+	}
 }
 
 void Texture::Load(const wstring& path)
 {
 	ReleaseGpuResources();
+	_image.Release();
 
 	// 파일 확장자 얻기
-	wstring ext = fs::path(path).extension();
+	const wstring ext = fs::path(path).extension();
 
 	if (ext == L".dds" || ext == L".DDS")
 		::LoadFromDDSFile(path.c_str(), DDS_FLAGS_NONE, nullptr, _image);
@@ -54,54 +171,38 @@ void Texture::Load(const wstring& path)
 		::LoadFromWICFile(path.c_str(), WIC_FLAGS_NONE, nullptr, _image);
 
 	HRESULT hr = ::CreateTexture(DEVICE.Get(), _image.GetMetadata(), &_tex2D);
-	if (FAILED(hr))
-		assert(nullptr);
+	assert(SUCCEEDED(hr));
 
 	_desc = _tex2D->GetDesc();
 
 	vector<D3D12_SUBRESOURCE_DATA> subResources;
 
-	hr = ::PrepareUpload(DEVICE.Get(),
+	hr = ::PrepareUpload(
+		DEVICE.Get(),
 		_image.GetImages(),
 		_image.GetImageCount(),
 		_image.GetMetadata(),
 		subResources);
 
-	if (FAILED(hr))
-		assert(nullptr);
+	assert(SUCCEEDED(hr));
 
 	const uint64 bufferSize = ::GetRequiredIntermediateSize(_tex2D.Get(), 0, static_cast<uint32>(subResources.size()));
 
 	D3D12_HEAP_PROPERTIES heapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+	D3D12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
 	ComPtr<ID3D12Resource> textureUploadHeap;
-	hr = DEVICE->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, 
-		&desc, D3D12_RESOURCE_STATE_GENERIC_READ, 
-		nullptr, IID_PPV_ARGS(textureUploadHeap.GetAddressOf()));
 
-	if (FAILED(hr))
-		assert(nullptr);
+	hr = DEVICE->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &uploadDesc, 
+		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(textureUploadHeap.GetAddressOf()));
 
-	::UpdateSubresources(RESOURCE_CMD_LIST.Get(),_tex2D.Get(), textureUploadHeap.Get(),
-		0, 0, static_cast<unsigned int>(subResources.size()), subResources.data());
+	assert(SUCCEEDED(hr));
+
+	::UpdateSubresources(RESOURCE_CMD_LIST.Get(), _tex2D.Get(), textureUploadHeap.Get(), 
+		0, 0, static_cast<uint32>(subResources.size()), subResources.data());
 
 	GDEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue();
-
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&_srvHeap));
-
-	_srvHeapBegin = _srvHeap->GetCPUDescriptorHandleForHeapStart();
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = _image.GetMetadata().format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = _image.GetMetadata().mipLevels;
-	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
+	CreateDefaultViews();
 }
 
 
@@ -109,53 +210,62 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 	const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 	D3D12_RESOURCE_FLAGS resFlags, Vec4 clearColor)
 {
-	_desc = CD3DX12_RESOURCE_DESC::Tex2D(format, width, height);
+	ReleaseGpuResources();
+
+	_desc = CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, 1, 1);
 	_desc.Flags = resFlags;
 
-	D3D12_CLEAR_VALUE optimizedClearValue = {};
-	D3D12_CLEAR_VALUE* pOptimizedClearValue = nullptr;
+	D3D12_CLEAR_VALUE clearValue = {};
+	D3D12_CLEAR_VALUE* clearValuePointer = nullptr;
+	D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
 
-	D3D12_RESOURCE_STATES resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
-
-	if (resFlags & D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	if (resFlags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 	{
-		resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE;
-		optimizedClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
-		pOptimizedClearValue = &optimizedClearValue;
+		initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		clearValue = CD3DX12_CLEAR_VALUE(format, 1.0f, 0);
+		clearValuePointer = &clearValue;
 	}
-	else if (resFlags & D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+	else if (resFlags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
 	{
-		resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
-		float arrFloat[4] = { clearColor.x, clearColor.y, clearColor.z, clearColor.w };
-		optimizedClearValue = CD3DX12_CLEAR_VALUE(format, arrFloat);
-		pOptimizedClearValue = &optimizedClearValue;
+		const float color[4] =
+		{
+			clearColor.x,
+			clearColor.y,
+			clearColor.z,
+			clearColor.w
+		};
+
+		clearValue = CD3DX12_CLEAR_VALUE(format, color);
+		clearValuePointer = &clearValue;
 	}
 
-	// Create Texture2D
 	HRESULT hr = DEVICE->CreateCommittedResource(
 		&heapProperty,
 		heapFlags,
 		&_desc,
-		resourceStates,
-		pOptimizedClearValue,
+		initialState,
+		clearValuePointer,
 		IID_PPV_ARGS(&_tex2D));
 
 	assert(SUCCEEDED(hr));
 
-	CreateFromResource(_tex2D);
+	_desc = _tex2D->GetDesc();
+	CreateDefaultViews();
 }
 
 
 void Texture::CreateCubeMap(DXGI_FORMAT format, uint32 size, uint32 mipLevels,
 	const D3D12_HEAP_PROPERTIES& heapProperty,	D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags)
 {
+	ReleaseGpuResources();
+
 	// CubeMap = Texture2D Array 6개
 	_desc = CD3DX12_RESOURCE_DESC::Tex2D(
 		format,
 		size,
 		size,
-		6,      // arraySize
-		mipLevels);     // mipLevels
+		6,									// arraySize
+		static_cast<uint16>(mipLevels));     // mipLevels
 
 	_desc.Flags = resFlags;
 
@@ -169,68 +279,22 @@ void Texture::CreateCubeMap(DXGI_FORMAT format, uint32 size, uint32 mipLevels,
 
 	assert(SUCCEEDED(hr));
 
-	// SRV 생성
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	hr = DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&_srvHeap));
-	assert(SUCCEEDED(hr));
-
-	_srvHeapBegin = _srvHeap->GetCPUDescriptorHandleForHeapStart();
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = _desc.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.TextureCube.MipLevels = _desc.MipLevels;
-	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-
-	DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
-
-	// RTV Heap 생성: CubeMap face 6개
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.NumDescriptors = 6 * _desc.MipLevels;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	hr = DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&_rtvHeap));
-	assert(SUCCEEDED(hr));
-	assert(_rtvHeap != nullptr);
-
-	uint32 rtvDescriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = _rtvHeap->GetCPUDescriptorHandleForHeapStart();
-
-	for (uint32 mip = 0; mip < _desc.MipLevels; ++mip)
-	{
-		for (uint32 face = 0; face < 6; ++face)
-		{
-			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-			rtvDesc.Format = _desc.Format;
-			rtvDesc.ViewDimension =
-				D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-
-			rtvDesc.Texture2DArray.MipSlice = mip;
-			rtvDesc.Texture2DArray.FirstArraySlice = face;
-			rtvDesc.Texture2DArray.ArraySize = 1;
-			rtvDesc.Texture2DArray.PlaneSlice = 0;
-
-			DEVICE->CreateRenderTargetView(_tex2D.Get(), &rtvDesc, rtvHandle);
-
-			rtvHandle.ptr += rtvDescriptorSize;
-		}
-	}
+	_desc = _tex2D->GetDesc();
+	CreateCubeMapViews();
 }
 
 void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 {
-	_tex2D = tex2D;
+	assert(tex2D != nullptr);
 
-	_desc = tex2D->GetDesc();
+	ReleaseGpuResources();
 
+	_tex2D = std::move(tex2D);
+	_desc = _tex2D->GetDesc();
+
+	CreateDefaultViews();
+
+	/*
 	// 주요 조합
 	// - DSV 단독 (조합X)
 	// - SRV
@@ -299,33 +363,25 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 		srvDesc.Texture2D.MipLevels = 1;
 		DEVICE->CreateShaderResourceView(_tex2D.Get(), &srvDesc, _srvHeapBegin);
 	}
+	*/
 }
 
 void Texture::ReleaseGpuResources()
 {
-	auto graphicsQueue = GDEngine->GetGraphicsCmdQueue();
+	const bool hasResource = _tex2D != nullptr;
+	const bool hasDescriptor = _srvAllocation.IsValid() || _uavAllocation.IsValid() || _rtvAllocation.IsValid() || _dsvAllocation.IsValid();
 
-	if (graphicsQueue != nullptr)
-	{
-		// 실제 GPU 메모리
-		graphicsQueue->DeferredRelease(_tex2D);
+	if (!hasResource && !hasDescriptor)
+		return;
 
-		// 현재 구조에서는 Descriptor Heap도 Texture가 소유하므로 같이 지연 해제
-		graphicsQueue->DeferredRelease(_srvHeap);
-		graphicsQueue->DeferredRelease(_rtvHeap);
-		graphicsQueue->DeferredRelease(_dsvHeap);
-		graphicsQueue->DeferredRelease(_uavHeap);
-	}
-	else
-	{
-		// 엔진 종료 순서상 Queue가 이미 사라졌다면 즉시 정리
-		_tex2D.Reset();
-		_srvHeap.Reset();
-		_rtvHeap.Reset();
-		_dsvHeap.Reset();
-		_uavHeap.Reset();
-	}
+	auto queue = GDEngine->GetGraphicsCmdQueue();
+	assert(queue != nullptr);
 
-	_srvHeapBegin = {};
-	_uavHeapBegin = {};
+	queue->DeferredRelease(_tex2D);
+	queue->DeferredFreeDescriptor(GDEngine->GetResourceDescriptorAllocator(), _srvAllocation);
+	queue->DeferredFreeDescriptor(GDEngine->GetResourceDescriptorAllocator(), _uavAllocation);
+	queue->DeferredFreeDescriptor(GDEngine->GetRTVDescriptorAllocator(), _rtvAllocation);
+	queue->DeferredFreeDescriptor(GDEngine->GetDSVDescriptorAllocator(), _dsvAllocation);
+
+	_desc = {};
 }
