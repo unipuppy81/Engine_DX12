@@ -3,9 +3,7 @@
 #include "SwapChain.h"
 #include "DEngine.h"
 
-// ************************
-// GraphicsCommandQueue
-// ************************
+#pragma region Graphics CommandQueue
 
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
@@ -20,11 +18,19 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChai
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
+	for (FrameResource& frame : _frames)
+	{
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&frame.cmdAllocator));
+	}
+
+	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _frames[0].cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
+
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&_cmdQueue));
-	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_cmdAlloc));
+	// device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&_cmdAlloc));
+	
 	// GPU 하나인 시스템 = 0
 	// 초기 상태 (그리기 명령을 nullptr 로 초기화)
-	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
+	// device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
 
 	_cmdList->Close();
 
@@ -37,7 +43,6 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChai
 
 void GraphicsCommandQueue::WaitSync()
 {
-	// Advance the fence value to mark command up to this fence point. 
 	_fenceValue++;
 	_cmdQueue->Signal(_fence.Get(), _fenceValue);
 	
@@ -51,19 +56,42 @@ void GraphicsCommandQueue::WaitSync()
 	}
 }
 
+void GraphicsCommandQueue::WaitForFence(uint64 fenceValue)
+{
+	if (fenceValue == 0 || _fence->GetCompletedValue() >= fenceValue)
+		return;
+
+	HRESULT hr = _fence->SetEventOnCompletion(fenceValue, _fenceEvent);
+	assert(SUCCEEDED(hr));
+
+	::WaitForSingleObject(_fenceEvent, INFINITE);
+}
+
+uint64 GraphicsCommandQueue::Signal()
+{
+	const uint64 fenceValue = ++_fenceValue;
+
+	HRESULT hr = _cmdQueue->Signal(_fence.Get(), fenceValue);
+	assert(SUCCEEDED(hr));
+
+	return fenceValue;
+}
+
 void GraphicsCommandQueue::BeginInitCommands()
 {
-	_cmdAlloc->Reset();
-	_cmdList->Reset(_cmdAlloc.Get(), nullptr);
+	FrameResource& frame = _frames[0];
+	WaitForFence(frame.fenceValue);
+	
+	frame.cmdAllocator->Reset();
+	_cmdList->Reset(frame.cmdAllocator.Get(), nullptr);
+	
+	GDEngine->GetGraphicsDescHeap()->Clear(0);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear(0);
 
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
 
 	ID3D12DescriptorHeap* heap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
-
 	_cmdList->SetDescriptorHeaps(1, &heap);
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear();
-
-	GDEngine->GetGraphicsDescHeap()->Clear();
 }
 
 void GraphicsCommandQueue::EndInitCommands()
@@ -78,8 +106,13 @@ void GraphicsCommandQueue::EndInitCommands()
 
 void GraphicsCommandQueue::RenderBegin()
 {
-	_cmdAlloc->Reset();
-	_cmdList->Reset(_cmdAlloc.Get(), nullptr);
+	_currentFrameIndex = _swapChain->GetBackBufferIndex();
+	_currentFrame = &_frames[_currentFrameIndex];
+
+	WaitForFence(_currentFrame->fenceValue);
+
+	_currentFrame->cmdAllocator->Reset();
+	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
 
 	int8 backIndex = _swapChain->GetBackBufferIndex();
 
@@ -90,13 +123,14 @@ void GraphicsCommandQueue::RenderBegin()
 	);	
 
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->Clear();
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear();
-	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CAMERA)->Clear();
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::GLOBAL)->Clear(_currentFrameIndex);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear(_currentFrameIndex);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear(_currentFrameIndex);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL_PBR)->Clear(_currentFrameIndex);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear(_currentFrameIndex);
+	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::CAMERA)->Clear(_currentFrameIndex);
 
-	GDEngine->GetGraphicsDescHeap()->Clear();
+	GDEngine->GetGraphicsDescHeap()->Clear(_currentFrameIndex);
 
 	ID3D12DescriptorHeap* descHeap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
 	_cmdList->SetDescriptorHeaps(1, &descHeap); 	// 무거운 연산이므로 프레임당 한 번만 하는게 좋음
@@ -117,11 +151,11 @@ void GraphicsCommandQueue::RenderEnd()
 	_cmdList->Close();	
 
 	ID3D12CommandList* cmdListArr[] = { _cmdList.Get() };
-	_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+
+	_cmdQueue->ExecuteCommandLists(1, cmdListArr);
+	_currentFrame->fenceValue = Signal();
+	
 	_swapChain->Present();
-
-	WaitSync();
-
 	_swapChain->SwapIndex();
 }
 
@@ -138,9 +172,9 @@ void GraphicsCommandQueue::FlushResourceCommandQueue()
 	_resCmdList->Reset(_resCmdAlloc.Get(), nullptr);
 }
 
-// ************************
-// ComputeCommandQueue
-// ************************
+#pragma endregion
+
+#pragma region Compute CommandQueue
 
 ComputeCommandQueue::~ComputeCommandQueue()
 {
@@ -188,3 +222,4 @@ void ComputeCommandQueue::FlushComputeCommandQueue()
 
 	COMPUTE_CMD_LIST->SetComputeRootSignature(COMPUTE_ROOT_SIGNATURE.Get());
 }
+#pragma endregion

@@ -9,7 +9,7 @@ class GraphicsDescriptorHeap
 public:
 	void Init(uint32 count);
 
-	void Clear();
+	void Clear(uint32 frameIndex);
 	void SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg);
 	void SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg);
 
@@ -26,10 +26,12 @@ private:
 private:
 	ComPtr<ID3D12DescriptorHeap> _descHeap;
 	uint64					_handleSize = 0;
-	uint64					_groupSize = 0;
-	uint64					_groupCount = 0;
-
+	uint64					_groupSize = 0;					// Descriptor Table 한 그룹의 바이트 크기
+	uint32					_groupCountPerFrame = 0;		// 프레임당 그룹 수
+	uint32					_totalGroupCount = 0;			// 전체 그룹 수
+	
 	uint32					_currentGroupIndex = 0;
+	uint32					_frameEndGroupIndex = 0;
 };
 
 // ************************

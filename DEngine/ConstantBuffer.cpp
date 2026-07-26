@@ -24,8 +24,11 @@ void ConstantBuffer::Init(CBV_REGISTER reg, uint32 size, uint32 count)
 	// 상수 버퍼는 256 바이트 배수로 만들어야 한다
 	// 0 256 512 768
 	_elementSize = (size + 255) & ~255;
-	_elementCount = count;
-
+	// 전달받은 count는 프레임당 개수
+	_elementCountPerFrame = count;
+	// 실제 Buffer와 CBV는 2프레임분 생성
+	_elementCount = _elementCountPerFrame * FRAME_COUNT;
+	
 	CreateBuffer();
 	CreateView();
 }
@@ -36,7 +39,7 @@ void ConstantBuffer::CreateBuffer()
 	D3D12_HEAP_PROPERTIES heapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
-	DEVICE->CreateCommittedResource(
+	HRESULT hr = DEVICE->CreateCommittedResource(
 		&heapProperty,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
@@ -44,7 +47,11 @@ void ConstantBuffer::CreateBuffer()
 		nullptr,
 		IID_PPV_ARGS(&_cbvBuffer));
 
-	_cbvBuffer->Map(0, nullptr, reinterpret_cast<void**>(&_mappedBuffer));
+	assert(SUCCEEDED(hr));
+
+	hr = _cbvBuffer->Map(0, nullptr, reinterpret_cast<void**>(&_mappedBuffer));
+
+	assert(SUCCEEDED(hr));
 }
 
 void ConstantBuffer::CreateView()
@@ -73,18 +80,23 @@ void ConstantBuffer::CreateView()
 	}
 }
 
-
-void ConstantBuffer::Clear()
+void ConstantBuffer::Clear(uint32 frameIndex)
 {
-	_currentIndex = 0;
+	assert(frameIndex < FRAME_COUNT);
+
+	_frameStartIndex = frameIndex * _elementCountPerFrame;
+	_currentIndex = _frameStartIndex;
+	_frameEndIndex = _frameStartIndex + _elementCountPerFrame;
 }
 
 void ConstantBuffer::PushGraphicsData(void* buffer, uint32 size)
 {
 	assert(_currentIndex < _elementCount);
 	assert(_elementSize == ((size + 255) & ~255));
-	::memcpy(&_mappedBuffer[_currentIndex * _elementSize], buffer, size);
 
+	const uint64 offset = static_cast<uint64>(_currentIndex) * _elementSize;
+	::memcpy(_mappedBuffer + offset, buffer, size);
+	
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(_currentIndex);
 	GDEngine->GetGraphicsDescHeap()->SetCBV(cpuHandle, _reg);
 
@@ -93,9 +105,15 @@ void ConstantBuffer::PushGraphicsData(void* buffer, uint32 size)
 
 void ConstantBuffer::SetGraphicsGlobalData(void* buffer, uint32 size)
 {
+	assert(_elementCountPerFrame >= 1);
 	assert(_elementSize == ((size + 255) & ~255));
-	::memcpy(&_mappedBuffer[0], buffer, size);
-	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(0, GetGpuVirtualAddress(0));
+
+	const uint32 index = _frameStartIndex;
+	const uint64 offset = static_cast<uint64>(index) * _elementSize;
+
+	::memcpy(_mappedBuffer + offset, buffer, size);
+
+	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(0, GetGpuVirtualAddress(index));
 }
 
 void ConstantBuffer::PushComputeData(void* buffer, uint32 size)

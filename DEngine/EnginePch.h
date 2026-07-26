@@ -154,6 +154,12 @@ struct Vertex
 	Vec4 indices;  // offset 60, size 16
 };
 
+struct FrameResource
+{
+	ComPtr<ID3D12CommandAllocator> cmdAllocator;
+	uint64 fenceValue = 0;
+};
+
 #define DECLARE_SINGLE(type)		\
 private:							\
 	type() {}						\
@@ -182,6 +188,8 @@ public:								\
 #define DELTA_TIME			GET_SINGLE(Timer)->GetDeltaTime()
 
 #define CONST_BUFFER(type)	GDEngine->GetConstantBuffer(type)
+
+
 
 struct TransformParams
 {
