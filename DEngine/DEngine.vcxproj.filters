@@ -198,6 +198,9 @@
     <ClCompile Include="DescriptorAllocator.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
+    <ClCompile Include="UploadAllocator.cpp">
+      <Filter>DEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -366,6 +369,9 @@
       <Filter>DEngine</Filter>
     </ClInclude>
     <ClInclude Include="DescriptorAllocator.h">
+      <Filter>DEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="UploadAllocator.h">
       <Filter>DEngine</Filter>
     </ClInclude>
   </ItemGroup>

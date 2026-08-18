@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UploadAllocator.h"
+
 enum class CONSTANT_BUFFER_TYPE : uint8
 {
 	GLOBAL,
@@ -32,32 +34,24 @@ public:
 	void SetGraphicsGlobalData(void* buffer, uint32 size);
 	void PushComputeData(void* buffer, uint32 size);
 
-	D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress(uint32 index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle(uint32 index);
 
 private:
-	void CreateBuffer();
 	void CreateView();
 
 private:
-	ComPtr<ID3D12Resource>	_cbvBuffer;
-	BYTE*					_mappedBuffer = nullptr;
+	// 256 byte 정렬된 CB 크기
+	uint32 _elementSize = 0;
 
-	uint32					_elementSize = 0;
+	// 프레임에서 최대 몇 번 사용할지
+	uint32 _elementCount = 0;
+	uint32 _currentIndex = 0;
 
-	// 프레임당 개수
-	uint32					_elementCountPerFrame = 0;
-	// 전체 개수 = 프레임당 개수 × FRAME_COUNT
-	uint32					_elementCount = 0;
+	// CPU 전용 CBV Descriptor Heap
+	ComPtr<ID3D12DescriptorHeap> _cbvHeap;
+	D3D12_CPU_DESCRIPTOR_HANDLE _cpuHandleBegin = {};
+	uint32 _handleIncrementSize = 0;
 
-	uint32					_currentIndex = 0;
-	uint32					_frameStartIndex = 0;
-	uint32					_frameEndIndex = 0;
-
-	ComPtr<ID3D12DescriptorHeap>		_cbvHeap;
-	D3D12_CPU_DESCRIPTOR_HANDLE			_cpuHandleBegin = {};
-	uint32								_handleIncrementSize = 0;
-
-	CBV_REGISTER			_reg = {};
+	CBV_REGISTER _reg = {};
 };
 

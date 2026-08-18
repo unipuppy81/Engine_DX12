@@ -1,11 +1,21 @@
 #pragma once
 
 #include "DeferredReleaseQueue.h"
+#include "UploadAllocator.h"
 
 class SwapChain;
 class DescriptorHeap;
 class DescriptorAllocator;
 class DescriptorAllocation;
+
+struct FrameResource
+{
+	ComPtr<ID3D12CommandAllocator> cmdAllocator;
+	uint64 fenceValue = 0;
+
+	UploadAllocator uploadAllocator;
+};
+
 
 // ************************
 // GraphicsCommandQueue
@@ -30,9 +40,15 @@ public:
 	void FlushResourceCommandQueue();
 	void FlushDeferredReleases();
 
-	ComPtr<ID3D12CommandQueue> GetCmdQueue() { return _cmdQueue; }
+	ComPtr<ID3D12CommandQueue>			GetCmdQueue() { return _cmdQueue; }
 	ComPtr<ID3D12GraphicsCommandList>	GetGraphicsCmdList() { return _cmdList; }
 	ComPtr<ID3D12GraphicsCommandList>	GetResCmdList() { return _resCmdList; }
+	UploadAllocator& GetCurrentUploadAllocator() 
+	{ 
+		assert(_currentFrame != nullptr);
+
+		return _currentFrame->uploadAllocator; 
+	}
 
 	template<typename T>
 	void DeferredRelease(ComPtr<T>& resource)
@@ -41,6 +57,8 @@ public:
 	}
 
 	void DeferredFreeDescriptor(shared_ptr<DescriptorAllocator> allocator, DescriptorAllocation& allocation);
+
+
 
 private:
 	ComPtr<ID3D12CommandQueue>			_cmdQueue;

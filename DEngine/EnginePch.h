@@ -154,12 +154,6 @@ struct Vertex
 	Vec4 indices;  // offset 60, size 16
 };
 
-struct FrameResource
-{
-	ComPtr<ID3D12CommandAllocator> cmdAllocator;
-	uint64 fenceValue = 0;
-};
-
 #define DECLARE_SINGLE(type)		\
 private:							\
 	type() {}						\

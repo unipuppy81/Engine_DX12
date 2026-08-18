@@ -18,6 +18,7 @@ GraphicsCommandQueue::~GraphicsCommandQueue()
 		_fenceEvent = nullptr;
 	}
 }
+
 void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChain> swapChain)
 {
 	_swapChain = swapChain;
@@ -29,6 +30,7 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChai
 	for (FrameResource& frame : _frames)
 	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&frame.cmdAllocator));
+		frame.uploadAllocator.Init(device.Get(), 8 * 1024 * 1024); // 8MB
 	}
 
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _frames[0].cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
@@ -47,6 +49,8 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChai
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 	_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	_currentFrameIndex = 0;
+	_currentFrame = &_frames[0];
 }
 
 void GraphicsCommandQueue::WaitSync()
@@ -87,11 +91,14 @@ uint64 GraphicsCommandQueue::Signal()
 
 void GraphicsCommandQueue::BeginInitCommands()
 {
-	FrameResource& frame = _frames[0];
-	WaitForFence(frame.fenceValue);
+	_currentFrameIndex = 0;
+	_currentFrame = &_frames[0];
+
+	WaitForFence(_currentFrame->fenceValue);
 	
-	frame.cmdAllocator->Reset();
-	_cmdList->Reset(frame.cmdAllocator.Get(), nullptr);
+	_currentFrame->cmdAllocator->Reset();
+	_currentFrame->uploadAllocator.Reset();
+	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
 	
 	GDEngine->GetGraphicsDescHeap()->Clear(0);
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear(0);
@@ -117,12 +124,15 @@ void GraphicsCommandQueue::RenderBegin()
 	_currentFrameIndex = _swapChain->GetBackBufferIndex();
 	_currentFrame = &_frames[_currentFrameIndex];
 
+	// 이 FrameResource를 GPU가 다 썼는지 확인
 	WaitForFence(_currentFrame->fenceValue);
 	
-	// 완료된 Fence에 연결된 리소스 실제 해제
+	// Fence 완료된 리소스 해제
 	_deferredReleaseQueue.Process(_fence->GetCompletedValue());
 
+	// 이번 프레임에서 재사용
 	_currentFrame->cmdAllocator->Reset();
+	_currentFrame->uploadAllocator.Reset();
 	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
 
 	int8 backIndex = _swapChain->GetBackBufferIndex();
