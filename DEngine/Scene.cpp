@@ -60,7 +60,7 @@ void Scene::Render()
 {
 	PushLightData();
 
-	ClearRTV();
+	//ClearRTV();
 
 	BakeIBLIfNeeded();
 
@@ -110,22 +110,22 @@ void Scene::Render()
 
 	// Light
 	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
-	auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	// auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgDiffuseLight = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgSpecularLight = graph.ImportTexture(lightingGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	graph.AddPass("Lighting",
 		[&](RenderGraphBuilder& builder)
 		{
-			// GBuffer 읽기
 			builder.Read(rgGBuffer0, RGResourceUsage::PixelSRV);
 			builder.Read(rgGBuffer1, RGResourceUsage::PixelSRV);
 			builder.Read(rgGBuffer2, RGResourceUsage::PixelSRV);
 			builder.Read(rgGBuffer3, RGResourceUsage::PixelSRV);
 
-			// 실제 Lighting Shader가 읽는 Shadow Texture를 넣기
 			builder.Read(rgShadowRT, RGResourceUsage::PixelSRV);
 
-			// Lighting 결과
-			builder.Write(rgLighting, RGResourceUsage::RenderTarget);
+			builder.Write(rgDiffuseLight, RGResourceUsage::RenderTarget);
+			builder.Write(rgSpecularLight, RGResourceUsage::RenderTarget);
 		},
 
 		[&](ID3D12GraphicsCommandList*)
@@ -142,10 +142,10 @@ void Scene::Render()
 	graph.AddPass("Final",
 		[&](RenderGraphBuilder& builder)
 		{
-			// Lighting 결과 읽기
-			builder.Read(rgLighting, RGResourceUsage::PixelSRV);
-			// BackBuffer에 출력
-			builder.Write(rgBackBuffer,RGResourceUsage::RenderTarget);
+			builder.Read(rgDiffuseLight, RGResourceUsage::PixelSRV);
+			builder.Read(rgSpecularLight, RGResourceUsage::PixelSRV);
+
+			builder.Write(rgBackBuffer, RGResourceUsage::RenderTarget);
 		},
 
 		[&](ID3D12GraphicsCommandList*)
@@ -168,17 +168,17 @@ void Scene::Render()
 void Scene::ClearRTV()
 {
 	// SwapChain Group 초기화
-	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+	//int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
+	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
 
 	// Shadow Group 초기화
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView();
+	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView();
 
 	// Deferred Group 초기화
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->ClearRenderTargetView();
+	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->ClearRenderTargetView();
 
 	// Lighting Group 초기화
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->ClearRenderTargetView();
+	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->ClearRenderTargetView();
 }
 
 void Scene::RenderShadow()
@@ -186,7 +186,7 @@ void Scene::RenderShadow()
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
 	
 	shadowGroup->OMSetRenderTargets(); 
-	//shadowGroup->ClearRenderTargetView();
+	shadowGroup->ClearRenderTargetView();
 
 	for (auto& light : _lights)
 	{
@@ -204,7 +204,7 @@ void Scene::RenderDeferred()
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
 	gBufferGroup->OMSetRenderTargets();
-	//gBufferGroup->ClearRenderTargetView();
+	gBufferGroup->ClearRenderTargetView();
 	
 	shared_ptr<Camera> mainCamera = _cameras[0];
 	mainCamera->SortGameObject();
@@ -224,7 +224,9 @@ void Scene::RenderLights()
 	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
 
 	lightingGroup->OMSetRenderTargets();
-	//lightingGroup->ClearRenderTargetView();
+
+	lightingGroup->ClearRenderTargetView(0);
+	lightingGroup->ClearRenderTargetView(1);
 
 	for (auto& light : _lights)
 	{
@@ -253,7 +255,7 @@ void Scene::RenderFinal()
 	swapChainGroup->OMSetRenderTargets(1, backIndex);
 
 	// ClearRTV()에서 여기로 이동
-	// swapChainGroup->ClearRenderTargetView(backIndex);
+	swapChainGroup->ClearRenderTargetView(backIndex);
 
 	//GET_SINGLE(Resources)->Get<Material>(L"Final")->PushGraphicsData();
 	GET_SINGLE(Resources)->Get<Material>(L"PBR_Final")->PushGraphicsData();
