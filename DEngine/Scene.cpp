@@ -64,36 +64,28 @@ void Scene::Render()
 
 	BakeIBLIfNeeded();
 
+
+	// RenderGraph
 	RenderGraph graph(GRAPHICS_CMD_LIST.Get());
 	
+
+	// Shadow
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
-	auto rgShadowRT =
-		graph.ImportTexture(
-			shadowGroup->GetRTTexture(0),
-			D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgShadowRT = graph.ImportTexture(shadowGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgShadowDepth = graph.ImportTexture(shadowGroup->GetDSTexture(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	auto rgShadowDepth =
-		graph.ImportTexture(
-			shadowGroup->GetDSTexture(),
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-	graph.AddPass(
-		"Shadow",
+	graph.AddPass("Shadow",
 		[&](RenderGraphBuilder& builder)
 		{
-			builder.Write(
-				rgShadowRT,
-				RGResourceUsage::RenderTarget);
-
-			builder.Write(
-				rgShadowDepth,
-				RGResourceUsage::DepthWrite);
+			builder.Write(rgShadowRT, RGResourceUsage::RenderTarget);
+			builder.Write(rgShadowDepth, RGResourceUsage::DepthWrite);
 		},
 		[&](ID3D12GraphicsCommandList*)
 		{
 			RenderShadow();
 		});
 
+	// G-Buffer
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
 	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0),D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -101,9 +93,7 @@ void Scene::Render()
 	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2), D3D12_RESOURCE_STATE_RENDER_TARGET);
 	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	graph.AddPass(
-		"GBuffer",
-
+	graph.AddPass("GBuffer",
 		[&](RenderGraphBuilder& builder)
 		{
 			builder.Write(rgGBuffer0, RGResourceUsage::RenderTarget);
@@ -117,6 +107,52 @@ void Scene::Render()
 			RenderDeferred();
 		});
 
+
+	// Light
+	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
+	auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	graph.AddPass("Lighting",
+		[&](RenderGraphBuilder& builder)
+		{
+			// GBuffer 읽기
+			builder.Read(rgGBuffer0, RGResourceUsage::PixelSRV);
+			builder.Read(rgGBuffer1, RGResourceUsage::PixelSRV);
+			builder.Read(rgGBuffer2, RGResourceUsage::PixelSRV);
+			builder.Read(rgGBuffer3, RGResourceUsage::PixelSRV);
+
+			// 실제 Lighting Shader가 읽는 Shadow Texture를 넣기
+			builder.Read(rgShadowRT, RGResourceUsage::PixelSRV);
+
+			// Lighting 결과
+			builder.Write(rgLighting, RGResourceUsage::RenderTarget);
+		},
+
+		[&](ID3D12GraphicsCommandList*)
+		{
+			RenderLights();
+		});
+
+
+	// Final
+	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
+	auto swapChainGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
+	auto rgBackBuffer = graph.ImportTexture(swapChainGroup->GetRTTexture(backIndex), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	graph.AddPass("Final",
+		[&](RenderGraphBuilder& builder)
+		{
+			// Lighting 결과 읽기
+			builder.Read(rgLighting, RGResourceUsage::PixelSRV);
+			// BackBuffer에 출력
+			builder.Write(rgBackBuffer,RGResourceUsage::RenderTarget);
+		},
+
+		[&](ID3D12GraphicsCommandList*)
+		{
+			RenderFinal();
+		});
+
 	graph.Execute();
 
 
@@ -124,8 +160,8 @@ void Scene::Render()
 
 	//RenderShadow();
 	//RenderDeferred();
-	RenderLights();
-	RenderFinal();
+	//RenderLights();
+	//RenderFinal();
 	RenderForward();
 }
 
@@ -160,7 +196,7 @@ void Scene::RenderShadow()
 		light->RenderShadow();
 	}
 
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
+	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
 }
 
 void Scene::RenderDeferred()
@@ -174,7 +210,7 @@ void Scene::RenderDeferred()
 	mainCamera->SortGameObject();
 	mainCamera->Render_Deferred();
 
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->WaitTargetToResource();
+	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->WaitTargetToResource();
 }
 
 void Scene::RenderLights()
@@ -195,7 +231,7 @@ void Scene::RenderLights()
 		light->RenderPBR();
 	}
 
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->WaitTargetToResource();
+	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->WaitTargetToResource();
 }
 
 void Scene::RenderFinal()
