@@ -67,26 +67,63 @@ void Scene::Render()
 	RenderGraph graph(GRAPHICS_CMD_LIST.Get());
 	
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
-	auto shadowTexture = shadowGroup->GetDSTexture();
-	auto rgShadow = graph.ImportTexture(shadowTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	
+	auto rgShadowRT =
+		graph.ImportTexture(
+			shadowGroup->GetRTTexture(0),
+			D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	auto rgShadowDepth =
+		graph.ImportTexture(
+			shadowGroup->GetDSTexture(),
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
 	graph.AddPass(
 		"Shadow",
-
 		[&](RenderGraphBuilder& builder)
 		{
-			builder.Write(rgShadow, RGResourceUsage::DepthWrite);
-		},
+			builder.Write(
+				rgShadowRT,
+				RGResourceUsage::RenderTarget);
 
+			builder.Write(
+				rgShadowDepth,
+				RGResourceUsage::DepthWrite);
+		},
 		[&](ID3D12GraphicsCommandList*)
 		{
 			RenderShadow();
 		});
 
+	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
+
+	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0),D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgGBuffer1 = graph.ImportTexture(gBufferGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	graph.AddPass(
+		"GBuffer",
+
+		[&](RenderGraphBuilder& builder)
+		{
+			builder.Write(rgGBuffer0, RGResourceUsage::RenderTarget);
+			builder.Write(rgGBuffer1, RGResourceUsage::RenderTarget);
+			builder.Write(rgGBuffer2, RGResourceUsage::RenderTarget);
+			builder.Write(rgGBuffer3, RGResourceUsage::RenderTarget);
+		},
+
+		[&](ID3D12GraphicsCommandList*)
+		{
+			RenderDeferred();
+		});
+
 	graph.Execute();
-	
+
+
+
+
 	//RenderShadow();
-	RenderDeferred();
+	//RenderDeferred();
 	RenderLights();
 	RenderFinal();
 	RenderForward();
