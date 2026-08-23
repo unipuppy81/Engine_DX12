@@ -49,7 +49,6 @@ struct RGTextureResource
 	shared_ptr<Texture> texture;
 
 	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
-	bool external = true;
 };
 
 class RenderGraphResource

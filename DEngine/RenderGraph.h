@@ -39,11 +39,10 @@ private:
 
     void BuildDependencyGraph();
     void SortPasses();
-    void TransitionResource(RGTextureResource& resource, D3D12_RESOURCE_STATES requiredState);
 
     D3D12_RESOURCE_STATES GetRequiredState(RGResourceUsage usage) const;
 
-    bool HasDependency(const RenderGraphPass& first, const RenderGraphPass& second) const;
+    void ValidatePassResources() const;
 
 private:
 
@@ -60,5 +59,7 @@ private:
 
     // 최종 실행 순서
     vector<uint32_t> _executionOrder;
+
+    unordered_map<Texture*, RGTextureHandle> _importedTextures;
 };
 

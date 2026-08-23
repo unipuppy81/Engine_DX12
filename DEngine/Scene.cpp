@@ -59,9 +59,6 @@ shared_ptr<class Camera> Scene::GetMainCamera()
 void Scene::Render()
 {
 	PushLightData();
-
-	//ClearRTV();
-
 	BakeIBLIfNeeded();
 
 
@@ -93,6 +90,8 @@ void Scene::Render()
 	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2));
 	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3));
 
+	auto rgMainDepth = graph.ImportTexture(gBufferGroup->GetDSTexture());
+
 	graph.AddPass("GBuffer",
 		[&](RenderGraphBuilder& builder)
 		{
@@ -100,6 +99,8 @@ void Scene::Render()
 			builder.Write(rgGBuffer1, RGResourceUsage::RenderTarget);
 			builder.Write(rgGBuffer2, RGResourceUsage::RenderTarget);
 			builder.Write(rgGBuffer3, RGResourceUsage::RenderTarget);
+			
+			builder.Write(rgMainDepth, RGResourceUsage::DepthWrite);
 		},
 
 		[&](ID3D12GraphicsCommandList*)
@@ -153,33 +154,42 @@ void Scene::Render()
 			RenderFinal();
 		});
 
+
+	// Forward
+
+	graph.AddPass("Forward",
+		[&](RenderGraphBuilder& builder)
+		{
+			// Final이 그린 BackBuffer 위에 추가 렌더링
+			builder.Write(rgBackBuffer, RGResourceUsage::RenderTarget);
+
+			// Forward 오브젝트의 Depth Test / Depth Write
+			builder.ReadWrite(rgMainDepth, RGResourceUsage::DepthWrite);
+		},
+
+		[&](ID3D12GraphicsCommandList*)
+		{
+			RenderForward();
+		});
+
+
+	// Present
+	graph.AddPass("Present",
+		[&](RenderGraphBuilder& builder)
+		{
+			builder.Write(
+				rgBackBuffer,
+				RGResourceUsage::Present);
+		},
+		[&](ID3D12GraphicsCommandList*)
+		{
+			// 실행할 렌더링 명령
+		});
+
+
 	graph.Execute();
-
-
-
-
-	//RenderShadow();
-	//RenderDeferred();
-	//RenderLights();
-	//RenderFinal();
-	RenderForward();
 }
 
-void Scene::ClearRTV()
-{
-	// SwapChain Group 초기화
-	//int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
-	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
-
-	// Shadow Group 초기화
-	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView();
-
-	// Deferred Group 초기화
-	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->ClearRenderTargetView();
-
-	// Lighting Group 초기화
-	// GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->ClearRenderTargetView();
-}
 
 void Scene::RenderShadow()
 {

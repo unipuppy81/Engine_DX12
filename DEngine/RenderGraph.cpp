@@ -9,15 +9,21 @@ RGTextureHandle RenderGraph::ImportTexture(const shared_ptr<Texture>& texture)
 {
     assert(texture != nullptr);
 
+    // 이미 등록된 Texture면 기존 Handle 반환
+    auto it = _importedTextures.find(texture.get());
+    if (it != _importedTextures.end())
+        return it->second;
+
     RGTextureHandle handle;
     handle.id = static_cast<uint32_t>(_textures.size());
 
     RGTextureResource resource;
     resource.texture = texture;
     resource.currentState = texture->GetResourceState();
-    resource.external = true;
 
     _textures.push_back(resource);
+
+    _importedTextures.emplace(texture.get(), handle);
 
     return handle;
 }
@@ -64,57 +70,80 @@ D3D12_RESOURCE_STATES RenderGraph::GetRequiredState(RGResourceUsage usage) const
 }
 
 // ============================================================
-// Pass 간 Dependency 확인
-// ============================================================
-
-bool RenderGraph::HasDependency(const RenderGraphPass& first, const RenderGraphPass& second) const
-{
-    for (const RGPassResource& firstResource : first._resources)
-    {
-        for (const RGPassResource& secondResource : second._resources)
-        {
-            // 서로 다른 Resource
-            if (firstResource.handle.id != secondResource.handle.id)
-                continue;
-
-            const bool firstWrite = firstResource.access != RGResourceAccess::READ;
-            const bool secondWrite = secondResource.access != RGResourceAccess::READ;
-
-            // Read -> Read는 Dependency 없음
-            if (!firstWrite && !secondWrite)
-                continue;
-
-            // 같은 Resource이고 둘 중 하나라도 Write
-            return true;
-        }
-    }
-
-    return false;
-}
-
-// ============================================================
 // Dependency Graph 생성
 // ============================================================
 
 void RenderGraph::BuildDependencyGraph()
 {
     const uint32_t passCount = static_cast<uint32_t>(_passes.size());
+    const uint32_t resourceCount = static_cast<uint32_t>(_textures.size());
 
     _adjacency.clear();
     _adjacency.resize(passCount);
 
-    for (uint32_t i = 0; i < passCount; ++i)
-    {
-        for (uint32_t j = i + 1; j < passCount; ++j)
+    vector<int32> lastWriter(resourceCount, -1);
+    vector<vector<uint32_t>> readers(resourceCount);
+
+    auto AddEdge = [&](uint32_t from, uint32_t to)
         {
-            if (HasDependency(*_passes[i], *_passes[j]))
+            if (from == to)
+                return;
+
+            auto& edges = _adjacency[from];
+
+            if (find(edges.begin(), edges.end(), to) == edges.end())
+                edges.push_back(to);
+        };
+
+    for (uint32_t passIndex = 0; passIndex < passCount; ++passIndex)
+    {
+        RenderGraphPass& pass = *_passes[passIndex];
+
+        for (const RGPassResource& resource : pass._resources)
+        {
+            const uint32_t id = resource.handle.id;
+
+            assert(id < resourceCount);
+
+            switch (resource.access)
             {
-                _adjacency[i].push_back(j);
+            case RGResourceAccess::READ:
+            {
+                // RAW : 이전 Write → 현재 Read
+                if (lastWriter[id] >= 0)
+                {
+                    AddEdge(static_cast<uint32_t>(lastWriter[id]), passIndex);
+                }
+                readers[id].push_back(passIndex);
+                break;
+            }
+
+            case RGResourceAccess::WRITE:
+            case RGResourceAccess::READWRITE:
+            {
+                // WAW : 이전 Write → 현재 Write
+                if (lastWriter[id] >= 0)
+                {
+                    AddEdge(
+                        static_cast<uint32_t>(lastWriter[id]),
+                        passIndex);
+                }
+
+                // WAR : 이전 Read → 현재 Write
+                for (uint32_t reader : readers[id])
+                {
+                    AddEdge(reader, passIndex);
+                }
+
+                readers[id].clear();
+                lastWriter[id] = static_cast<int32>(passIndex);
+
+                break;
+            }
             }
         }
     }
 }
-
 // ============================================================
 // Topological Sort
 // ============================================================
@@ -174,44 +203,10 @@ void RenderGraph::SortPasses()
 
 void RenderGraph::Compile()
 {
+    ValidatePassResources();
+
     BuildDependencyGraph();
     SortPasses();
-}
-
-// ============================================================
-// Resource Barrier
-// ============================================================
-
-void RenderGraph::TransitionResource(RGTextureResource& resource, D3D12_RESOURCE_STATES requiredState)
-{
-    assert(resource.texture != nullptr);
-    assert(_cmdList != nullptr);
-
-    // 이미 필요한 State
-    if (resource.currentState == requiredState)
-    {
-        // UAV -> UAV의 경우 State 변화는 없지만
-        // 이전 UAV 작업 완료 보장이 필요할 수 있음
-        if (requiredState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
-        {
-            D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV(resource.texture->GetTex2D().Get());
-
-            _cmdList->ResourceBarrier(1, &barrier);
-        }
-
-        return;
-    }
-
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            resource.texture->GetTex2D().Get(),
-            resource.currentState,
-            requiredState);
-
-    _cmdList->ResourceBarrier(1, &barrier);
-
-    // RenderGraph 내부 State 갱신
-    resource.currentState = requiredState;
-    resource.texture->SetResourceState(requiredState);
 }
 
 // ============================================================
@@ -224,12 +219,9 @@ void RenderGraph::Execute()
 
     for (uint32_t passIndex : _executionOrder)
     {
-        RenderGraphPass& pass =
-            *_passes[passIndex];
+        RenderGraphPass& pass = *_passes[passIndex];
 
-        // ----------------------------------------
-        // Pass 실행 전에 필요한 State로 전환
-        // ----------------------------------------
+        vector<D3D12_RESOURCE_BARRIER> barriers;
 
         for (const RGPassResource& passResource : pass._resources)
         {
@@ -238,15 +230,62 @@ void RenderGraph::Execute()
 
             RGTextureResource& resource = _textures[passResource.handle.id];
 
-            const D3D12_RESOURCE_STATES requiredState = GetRequiredState(passResource.usage);
+            D3D12_RESOURCE_STATES requiredState = GetRequiredState(passResource.usage);
 
-            TransitionResource(resource, requiredState);
+            // 같은 State면 Transition 필요 없음
+            if (resource.currentState == requiredState)
+            {
+                // UAV는 같은 State여도 실행 순서 보장용 Barrier 필요
+                if (requiredState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+                {
+                    barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(resource.texture->GetTex2D().Get()));
+                }
+
+                continue;
+            }
+
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.texture->GetTex2D().Get(), resource.currentState, requiredState));
+
+            resource.currentState = requiredState;
+            resource.texture->SetResourceState(requiredState);
         }
 
-        // ----------------------------------------
-        // 실제 Shadow / GBuffer / Lighting 실행
-        // ----------------------------------------
+        // Pass 실행 직전에 Barrier 한 번에 처리
+        if (!barriers.empty())
+        {
+            _cmdList->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
 
         pass.Execute(_cmdList);
+    }
+}
+
+void RenderGraph::ValidatePassResources() const
+{
+    vector<bool> used(_textures.size(), false);
+
+    for (const auto& pass : _passes)
+    {
+        const auto& resources = pass->_resources;
+
+        for (uint32_t i = 0; i < resources.size(); ++i)
+        {
+            assert(resources[i].handle.IsValid());
+            assert(resources[i].handle.id < _textures.size());
+
+            used[resources[i].handle.id] = true;
+
+            // 같은 Pass에서 같은 Resource 중복 선언 방지
+            for (uint32_t j = i + 1; j < resources.size(); ++j)
+            {
+                assert(resources[i].handle.id != resources[j].handle.id && "Same resource declared multiple times in one RenderGraph pass");
+            }
+        }
+    }
+
+    // Import했는데 어떤 Pass에서도 안 쓰는 리소스 검출
+    for (uint32_t i = 0; i < used.size(); ++i)
+    {
+        assert(used[i] && "Imported RenderGraph resource is never used");
     }
 }
