@@ -110,7 +110,7 @@ void RenderTargetGroup::ClearRenderTargetView(uint32 index)
 
 void RenderTargetGroup::ClearRenderTargetView()
 {
-	WaitResourceToTarget();
+	//WaitResourceToTarget();
 
 	for (uint32 i = 0; i < _rtCount; ++i)
 	{
@@ -119,13 +119,7 @@ void RenderTargetGroup::ClearRenderTargetView()
 
 	if (_dsTexture != nullptr)
 	{
-		GRAPHICS_CMD_LIST->ClearDepthStencilView(
-			_dsvHandle, 
-			D3D12_CLEAR_FLAG_DEPTH,
-			1.f,
-			0,
-			0,
-			nullptr);
+		GRAPHICS_CMD_LIST->ClearDepthStencilView(_dsvHandle,  D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	}
 }
 

@@ -71,8 +71,8 @@ void Scene::Render()
 
 	// Shadow
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
-	auto rgShadowRT = graph.ImportTexture(shadowGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET);
-	auto rgShadowDepth = graph.ImportTexture(shadowGroup->GetDSTexture(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgShadowRT = graph.ImportTexture(shadowGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgShadowDepth = graph.ImportTexture(shadowGroup->GetDSTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	graph.AddPass("Shadow",
 		[&](RenderGraphBuilder& builder)
@@ -88,10 +88,10 @@ void Scene::Render()
 	// G-Buffer
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
-	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0),D3D12_RESOURCE_STATE_RENDER_TARGET);
-	auto rgGBuffer1 = graph.ImportTexture(gBufferGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_RENDER_TARGET);
-	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2), D3D12_RESOURCE_STATE_RENDER_TARGET);
-	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgGBuffer1 = graph.ImportTexture(gBufferGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	graph.AddPass("GBuffer",
 		[&](RenderGraphBuilder& builder)
@@ -110,7 +110,7 @@ void Scene::Render()
 
 	// Light
 	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
-	auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	graph.AddPass("Lighting",
 		[&](RenderGraphBuilder& builder)
@@ -186,7 +186,7 @@ void Scene::RenderShadow()
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
 	
 	shadowGroup->OMSetRenderTargets(); 
-	// shadowGroup->ClearRenderTargetView();
+	//shadowGroup->ClearRenderTargetView();
 
 	for (auto& light : _lights)
 	{
@@ -204,11 +204,12 @@ void Scene::RenderDeferred()
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
 	gBufferGroup->OMSetRenderTargets();
-	// gBufferGroup->ClearRenderTargetView();
+	//gBufferGroup->ClearRenderTargetView();
 	
 	shared_ptr<Camera> mainCamera = _cameras[0];
 	mainCamera->SortGameObject();
 	mainCamera->Render_Deferred();
+	//gBufferGroup->WaitTargetToResource();
 
 	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->WaitTargetToResource();
 }
@@ -252,7 +253,7 @@ void Scene::RenderFinal()
 	swapChainGroup->OMSetRenderTargets(1, backIndex);
 
 	// ClearRTV()에서 여기로 이동
-	//swapChainGroup->ClearRenderTargetView(backIndex);
+	// swapChainGroup->ClearRenderTargetView(backIndex);
 
 	//GET_SINGLE(Resources)->Get<Material>(L"Final")->PushGraphicsData();
 	GET_SINGLE(Resources)->Get<Material>(L"PBR_Final")->PushGraphicsData();
