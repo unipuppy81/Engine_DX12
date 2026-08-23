@@ -71,8 +71,8 @@ void Scene::Render()
 
 	// Shadow
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
-	auto rgShadowRT = graph.ImportTexture(shadowGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgShadowDepth = graph.ImportTexture(shadowGroup->GetDSTexture(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	auto rgShadowRT = graph.ImportTexture(shadowGroup->GetRTTexture(0));
+	auto rgShadowDepth = graph.ImportTexture(shadowGroup->GetDSTexture());
 
 	graph.AddPass("Shadow",
 		[&](RenderGraphBuilder& builder)
@@ -88,10 +88,10 @@ void Scene::Render()
 	// G-Buffer
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
-	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgGBuffer1 = graph.ImportTexture(gBufferGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgGBuffer0 = graph.ImportTexture(gBufferGroup->GetRTTexture(0));
+	auto rgGBuffer1 = graph.ImportTexture(gBufferGroup->GetRTTexture(1));
+	auto rgGBuffer2 = graph.ImportTexture(gBufferGroup->GetRTTexture(2));
+	auto rgGBuffer3 = graph.ImportTexture(gBufferGroup->GetRTTexture(3));
 
 	graph.AddPass("GBuffer",
 		[&](RenderGraphBuilder& builder)
@@ -111,8 +111,8 @@ void Scene::Render()
 	// Light
 	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
 	// auto rgLighting = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgDiffuseLight = graph.ImportTexture(lightingGroup->GetRTTexture(0), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	auto rgSpecularLight = graph.ImportTexture(lightingGroup->GetRTTexture(1), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	auto rgDiffuseLight = graph.ImportTexture(lightingGroup->GetRTTexture(0));
+	auto rgSpecularLight = graph.ImportTexture(lightingGroup->GetRTTexture(1));
 
 	graph.AddPass("Lighting",
 		[&](RenderGraphBuilder& builder)
@@ -137,7 +137,7 @@ void Scene::Render()
 	// Final
 	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
 	auto swapChainGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
-	auto rgBackBuffer = graph.ImportTexture(swapChainGroup->GetRTTexture(backIndex), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto rgBackBuffer = graph.ImportTexture(swapChainGroup->GetRTTexture(backIndex));
 
 	graph.AddPass("Final",
 		[&](RenderGraphBuilder& builder)

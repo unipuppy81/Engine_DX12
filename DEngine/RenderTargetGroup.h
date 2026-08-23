@@ -39,9 +39,6 @@ public:
 	shared_ptr<Texture> GetRTTexture(uint32 index) { return _rtVec[index].target; }
 	shared_ptr<Texture> GetDSTexture() { return _dsTexture; }
 
-	void WaitTargetToResource();
-	void WaitResourceToTarget();
-
 private:
 	RENDER_TARGET_GROUP_TYPE			_groupType = {};
 	vector<RenderTarget>				_rtVec;
@@ -50,8 +47,5 @@ private:
 
 	vector<D3D12_CPU_DESCRIPTOR_HANDLE> _rtvHandles;
 	D3D12_CPU_DESCRIPTOR_HANDLE			_dsvHandle = {};
-
-	D3D12_RESOURCE_BARRIER _targetToResource[MAX_RENDER_TARGET_COUNT] = {};
-	D3D12_RESOURCE_BARRIER _resourceToTarget[MAX_RENDER_TARGET_COUNT] = {};
 };
 

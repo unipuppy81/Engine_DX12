@@ -5,18 +5,16 @@
 
 #include <queue>
 
-RGTextureHandle RenderGraph::ImportTexture(const shared_ptr<Texture>& texture, D3D12_RESOURCE_STATES currentState)
+RGTextureHandle RenderGraph::ImportTexture(const shared_ptr<Texture>& texture)
 {
     assert(texture != nullptr);
 
     RGTextureHandle handle;
-
     handle.id = static_cast<uint32_t>(_textures.size());
 
     RGTextureResource resource;
-
     resource.texture = texture;
-    resource.currentState = currentState;
+    resource.currentState = texture->GetResourceState();
     resource.external = true;
 
     _textures.push_back(resource);
@@ -213,6 +211,7 @@ void RenderGraph::TransitionResource(RGTextureResource& resource, D3D12_RESOURCE
 
     // RenderGraph 내부 State 갱신
     resource.currentState = requiredState;
+    resource.texture->SetResourceState(requiredState);
 }
 
 // ============================================================

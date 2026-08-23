@@ -249,6 +249,8 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 
 	assert(SUCCEEDED(hr));
 
+	_resourceState = initialState;
+
 	_desc = _tex2D->GetDesc();
 	CreateDefaultViews();
 }
@@ -269,15 +271,19 @@ void Texture::CreateCubeMap(DXGI_FORMAT format, uint32 size, uint32 mipLevels,
 
 	_desc.Flags = resFlags;
 
+	const D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
+
 	HRESULT hr = DEVICE->CreateCommittedResource(
 		&heapProperty,
 		heapFlags,
 		&_desc,
-		D3D12_RESOURCE_STATE_COMMON,
+		initialState,
 		nullptr,
 		IID_PPV_ARGS(&_tex2D));
 
 	assert(SUCCEEDED(hr));
+
+	_resourceState = initialState;
 
 	_desc = _tex2D->GetDesc();
 	CreateCubeMapViews();
@@ -291,6 +297,8 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 
 	_tex2D = std::move(tex2D);
 	_desc = _tex2D->GetDesc();
+
+	_resourceState = D3D12_RESOURCE_STATE_PRESENT;
 
 	CreateDefaultViews();
 

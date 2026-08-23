@@ -38,6 +38,9 @@ public:
 	float GetHeight() const { return static_cast<float>(_desc.Height); }
 	uint32 GetMipLevels() const { return static_cast<uint32>(_desc.MipLevels); }
 
+	D3D12_RESOURCE_STATES GetResourceState() const { return _resourceState; }
+	void SetResourceState(D3D12_RESOURCE_STATES state) { _resourceState = state; }
+
 private:
 	void CreateDefaultViews();
 	void CreateCubeMapViews();
@@ -51,5 +54,7 @@ private:
 	DescriptorAllocation _uavAllocation;
 	DescriptorAllocation _rtvAllocation;
 	DescriptorAllocation _dsvAllocation;
+
+	D3D12_RESOURCE_STATES _resourceState = D3D12_RESOURCE_STATE_COMMON;
 };
 

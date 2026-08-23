@@ -136,9 +136,10 @@ void GraphicsCommandQueue::RenderBegin()
 	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
 
 	int8 backIndex = _swapChain->GetBackBufferIndex();
+	auto backBuffer = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex);
 
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex)->GetTex2D().Get(),
+		backBuffer->GetTex2D().Get(), 
 		D3D12_RESOURCE_STATE_PRESENT,			// 현재 출력
 		D3D12_RESOURCE_STATE_RENDER_TARGET		// 백 버퍼
 	);	
@@ -157,16 +158,22 @@ void GraphicsCommandQueue::RenderBegin()
 	_cmdList->SetDescriptorHeaps(1, &descHeap); 	// 무거운 연산이므로 프레임당 한 번만 하는게 좋음
 
 	_cmdList->ResourceBarrier(1, &barrier);
+	backBuffer->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 void GraphicsCommandQueue::RenderEnd()
 {
+	auto backBuffer = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(_currentFrameIndex);
+
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(_currentFrameIndex)->GetTex2D().Get(),
+		backBuffer->GetTex2D().Get(), 
 		D3D12_RESOURCE_STATE_RENDER_TARGET, // 백 버퍼
 		D3D12_RESOURCE_STATE_PRESENT);		// 현재 출력
 
 	_cmdList->ResourceBarrier(1, &barrier);
+
+	backBuffer->SetResourceState(D3D12_RESOURCE_STATE_PRESENT);
+
 	_cmdList->Close();	
 
 	ID3D12CommandList* cmdListArr[] = { _cmdList.Get() };

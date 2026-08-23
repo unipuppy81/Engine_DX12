@@ -21,11 +21,6 @@ void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, vector<Render
 
 		_rtvHandles.push_back(_rtVec[i].target->GetRTVHandle());
 
-		_targetToResource[i] = CD3DX12_RESOURCE_BARRIER::Transition(_rtVec[i].target->GetTex2D().Get(),
-			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
-
-		_resourceToTarget[i] = CD3DX12_RESOURCE_BARRIER::Transition(_rtVec[i].target->GetTex2D().Get(),
-			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
 
 	if (_dsTexture != nullptr)
@@ -121,20 +116,4 @@ void RenderTargetGroup::ClearRenderTargetView()
 	{
 		GRAPHICS_CMD_LIST->ClearDepthStencilView(_dsvHandle,  D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	}
-}
-
-void RenderTargetGroup::WaitTargetToResource()
-{
-	if (_rtCount == 0)
-		return;
-
-	GRAPHICS_CMD_LIST->ResourceBarrier(_rtCount, _targetToResource);
-}
-
-void RenderTargetGroup::WaitResourceToTarget()
-{
-	if (_rtCount == 0)
-		return;
-
-	GRAPHICS_CMD_LIST->ResourceBarrier(_rtCount, _resourceToTarget);
 }

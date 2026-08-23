@@ -13,7 +13,7 @@ public:
     // 기존 Texture를 RenderGraph에 등록
     // --------------------------------------------------------
 
-    RGTextureHandle ImportTexture(const shared_ptr<Texture>& texture, D3D12_RESOURCE_STATES currentState);
+    RGTextureHandle ImportTexture(const shared_ptr<Texture>& texture);
 
     // --------------------------------------------------------
     // Pass 등록
