@@ -2,6 +2,7 @@
 
 class GameObject;
 class Camera;
+class RenderGraph;
 
 class Scene
 {

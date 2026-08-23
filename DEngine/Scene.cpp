@@ -6,6 +6,7 @@
 #include "ConstantBuffer.h"
 #include "Light.h"
 #include "Resources.h"
+#include "RenderGraph.h"
 
 void Scene::Awake()
 {
@@ -63,7 +64,28 @@ void Scene::Render()
 
 	BakeIBLIfNeeded();
 
-	RenderShadow();
+	RenderGraph graph(GRAPHICS_CMD_LIST.Get());
+	
+	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
+	auto shadowTexture = shadowGroup->GetDSTexture();
+	auto rgShadow = graph.ImportTexture(shadowTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	
+	graph.AddPass(
+		"Shadow",
+
+		[&](RenderGraphBuilder& builder)
+		{
+			builder.Write(rgShadow, RGResourceUsage::DepthWrite);
+		},
+
+		[&](ID3D12GraphicsCommandList*)
+		{
+			RenderShadow();
+		});
+
+	graph.Execute();
+	
+	//RenderShadow();
 	RenderDeferred();
 	RenderLights();
 	RenderFinal();
@@ -88,7 +110,10 @@ void Scene::ClearRTV()
 
 void Scene::RenderShadow()
 {
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets();
+	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
+	
+	shadowGroup->OMSetRenderTargets(); 
+	// shadowGroup->ClearRenderTargetView();
 
 	for (auto& light : _lights)
 	{
@@ -103,9 +128,11 @@ void Scene::RenderShadow()
 
 void Scene::RenderDeferred()
 {
-	// Deferred OMSet
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->OMSetRenderTargets();
+	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
 
+	gBufferGroup->OMSetRenderTargets();
+	// gBufferGroup->ClearRenderTargetView();
+	
 	shared_ptr<Camera> mainCamera = _cameras[0];
 	mainCamera->SortGameObject();
 	mainCamera->Render_Deferred();
@@ -116,12 +143,15 @@ void Scene::RenderDeferred()
 void Scene::RenderLights()
 {
 	shared_ptr<Camera> mainCamera = _cameras[0];
+
 	Camera::S_MatView = mainCamera->GetViewMatrix();
 	Camera::S_MatProjection = mainCamera->GetProjectionMatrix();
 
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->OMSetRenderTargets();
+	auto lightingGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING);
 
-	// 광원을 그린다.
+	lightingGroup->OMSetRenderTargets();
+	//lightingGroup->ClearRenderTargetView();
+
 	for (auto& light : _lights)
 	{
 		light->Render();
@@ -142,11 +172,14 @@ void Scene::RenderFinal()
 
 	CONST_BUFFER(CONSTANT_BUFFER_TYPE::CAMERA)->PushGraphicsData(&cameraParams, sizeof(CameraParams));
 
-
-
 	// Swapchain OMSet
 	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
-	GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+
+	auto swapChainGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
+	swapChainGroup->OMSetRenderTargets(1, backIndex);
+
+	// ClearRTV()에서 여기로 이동
+	//swapChainGroup->ClearRenderTargetView(backIndex);
 
 	//GET_SINGLE(Resources)->Get<Material>(L"Final")->PushGraphicsData();
 	GET_SINGLE(Resources)->Get<Material>(L"PBR_Final")->PushGraphicsData();

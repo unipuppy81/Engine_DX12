@@ -100,10 +100,12 @@ void RenderTargetGroup::ClearRenderTargetView(uint32 index)
 
 	GRAPHICS_CMD_LIST->ClearRenderTargetView(_rtvHandles[index], _rtVec[index].clearColor, 0, nullptr);
 
+	/*
 	if (_dsTexture != nullptr)
 	{
 		GRAPHICS_CMD_LIST->ClearDepthStencilView(_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	}
+	*/
 }
 
 void RenderTargetGroup::ClearRenderTargetView()
@@ -117,7 +119,13 @@ void RenderTargetGroup::ClearRenderTargetView()
 
 	if (_dsTexture != nullptr)
 	{
-		GRAPHICS_CMD_LIST->ClearDepthStencilView(_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+		GRAPHICS_CMD_LIST->ClearDepthStencilView(
+			_dsvHandle, 
+			D3D12_CLEAR_FLAG_DEPTH,
+			1.f,
+			0,
+			0,
+			nullptr);
 	}
 }
 

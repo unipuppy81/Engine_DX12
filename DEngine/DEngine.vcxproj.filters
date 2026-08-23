@@ -201,6 +201,9 @@
     <ClCompile Include="UploadAllocator.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
+    <ClCompile Include="RenderGraphResource.cpp" />
+    <ClCompile Include="RenderGraphPass.cpp" />
+    <ClCompile Include="RenderGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -374,6 +377,9 @@
     <ClInclude Include="UploadAllocator.h">
       <Filter>DEngine</Filter>
     </ClInclude>
+    <ClInclude Include="RenderGraphResource.h" />
+    <ClInclude Include="RenderGraphPass.h" />
+    <ClInclude Include="RenderGraph.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">
