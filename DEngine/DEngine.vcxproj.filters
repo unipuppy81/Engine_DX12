@@ -34,6 +34,9 @@
     <Filter Include="Diagnostics">
       <UniqueIdentifier>{8e5b10f3-56dd-445f-ae76-16efd92ddf53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DEngine\RenderGraph">
+      <UniqueIdentifier>{3ab073a9-a65f-4c53-abf6-4a870fd952f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -201,9 +204,18 @@
     <ClCompile Include="UploadAllocator.cpp">
       <Filter>DEngine</Filter>
     </ClCompile>
-    <ClCompile Include="RenderGraphResource.cpp" />
-    <ClCompile Include="RenderGraphPass.cpp" />
-    <ClCompile Include="RenderGraph.cpp" />
+    <ClCompile Include="RenderGraph.cpp">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraphPass.cpp">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderGraphResource.cpp">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandContext.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="RenderGraphExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -377,9 +389,18 @@
     <ClInclude Include="UploadAllocator.h">
       <Filter>DEngine</Filter>
     </ClInclude>
-    <ClInclude Include="RenderGraphResource.h" />
-    <ClInclude Include="RenderGraphPass.h" />
-    <ClInclude Include="RenderGraph.h" />
+    <ClInclude Include="RenderGraph.h">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraphPass.h">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraphResource.h">
+      <Filter>DEngine\RenderGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandContext.h" />
+    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="RenderGraphExecutor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">

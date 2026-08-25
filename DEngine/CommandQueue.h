@@ -2,6 +2,7 @@
 
 #include "DeferredReleaseQueue.h"
 #include "UploadAllocator.h"
+#include "CommandContext.h"
 
 class SwapChain;
 class DescriptorHeap;
@@ -11,9 +12,13 @@ class DescriptorAllocation;
 struct FrameResource
 {
 	ComPtr<ID3D12CommandAllocator> cmdAllocator;
+	UploadAllocator uploadAllocator;
+
 	uint64 fenceValue = 0;
 
-	UploadAllocator uploadAllocator;
+	// Multi-threaded Command Recording
+	vector<CommandContext> commandContexts;
+	atomic<uint32> commandContextIndex = 0;
 };
 
 
@@ -46,7 +51,6 @@ public:
 	UploadAllocator& GetCurrentUploadAllocator() 
 	{ 
 		assert(_currentFrame != nullptr);
-
 		return _currentFrame->uploadAllocator; 
 	}
 
@@ -58,7 +62,8 @@ public:
 
 	void DeferredFreeDescriptor(shared_ptr<DescriptorAllocator> allocator, DescriptorAllocation& allocation);
 
-
+	CommandContext* AcquireCommandContext();
+	void ExecuteCommandLists(const vector<ID3D12CommandList*>& commandList);
 
 private:
 	ComPtr<ID3D12CommandQueue>			_cmdQueue;

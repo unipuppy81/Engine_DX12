@@ -158,6 +158,7 @@
     <ClInclude Include="Animator.h" />
     <ClInclude Include="BaseCollider.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CommandContext.h" />
     <ClInclude Include="CommandQueue.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ConstantBuffer.h" />
@@ -195,6 +196,7 @@
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RenderGraph.h" />
+    <ClInclude Include="RenderGraphExecutor.h" />
     <ClInclude Include="RenderGraphPass.h" />
     <ClInclude Include="RenderGraphResource.h" />
     <ClInclude Include="RenderTargetGroup.h" />
@@ -212,6 +214,7 @@
     <ClInclude Include="TestCameraScript.h" />
     <ClInclude Include="TestDragon.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UploadAllocator.h" />
@@ -220,6 +223,7 @@
     <ClCompile Include="Animator.cpp" />
     <ClCompile Include="BaseCollider.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CommandContext.cpp" />
     <ClCompile Include="CommandQueue.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
@@ -274,6 +278,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RenderGraph.cpp" />
+    <ClCompile Include="RenderGraphExecutor.cpp" />
     <ClCompile Include="RenderGraphPass.cpp" />
     <ClCompile Include="RenderGraphResource.cpp" />
     <ClCompile Include="RenderTargetGroup.cpp" />
@@ -291,6 +296,7 @@
     <ClCompile Include="TestCameraScript.cpp" />
     <ClCompile Include="TestDragon.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="UploadAllocator.cpp" />

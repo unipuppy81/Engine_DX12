@@ -55,13 +55,15 @@ void Material::PushComputeData()
 
 void Material::Dispatch(uint32 x, uint32 y, uint32 z)
 {
+	auto cmdList = COMPUTE_CMD_LIST.Get();
+
 	// CBV + SRV + SetPipelineState
 	PushComputeData();
 
 	// SetDescriptorHeaps + SetComputeRootDescriptorTable
 	GDEngine->GetComputeDescHeap()->CommitTable();
 
-	COMPUTE_CMD_LIST->Dispatch(x, y, z);
+	cmdList->Dispatch(x, y, z);
 
 	GDEngine->GetComputeCmdQueue()->FlushComputeCommandQueue();
 }

@@ -2,6 +2,7 @@
 #include "CommandQueue.h"
 #include "SwapChain.h"
 #include "DEngine.h"
+#include "CommandContext.h"
 
 
 #pragma region Graphics CommandQueue
@@ -31,6 +32,15 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChai
 	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&frame.cmdAllocator));
 		frame.uploadAllocator.Init(device.Get(), 8 * 1024 * 1024); // 8MB
+
+		// 병렬 Command Recording용 Context Pool
+		frame.commandContexts.reserve(COMMAND_CONTEXT_COUNT);
+
+		for (uint32 i = 0; i < COMMAND_CONTEXT_COUNT; ++i)
+		{
+			frame.commandContexts.emplace_back();
+			frame.commandContexts.back().Init(device.Get());
+		}
 	}
 
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, _frames[0].cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&_cmdList));
@@ -130,13 +140,16 @@ void GraphicsCommandQueue::RenderBegin()
 	// Fence 완료된 리소스 해제
 	_deferredReleaseQueue.Process(_fence->GetCompletedValue());
 
+	// 이번 Frame의 CommandContext들을 다시 빌릴 수 있게 함
+	_currentFrame->commandContextIndex.store(0);
+
 	// 이번 프레임에서 재사용
 	_currentFrame->cmdAllocator->Reset();
 	_currentFrame->uploadAllocator.Reset();
 	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
 
-
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
+
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::GLOBAL)->Clear(_currentFrameIndex);
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear(_currentFrameIndex);
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear(_currentFrameIndex);
@@ -214,6 +227,24 @@ void GraphicsCommandQueue::DeferredFreeDescriptor(shared_ptr<DescriptorAllocator
 			allocator->Free(releasedAllocation);
 		});
 }
+
+CommandContext* GraphicsCommandQueue::AcquireCommandContext() 
+{
+	uint32 index = _currentFrame->commandContextIndex.fetch_add(1); 
+	assert(index < _currentFrame->commandContexts.size()); 
+	CommandContext& context = _currentFrame->commandContexts[index]; 
+	context.Reset(); 
+	return &context; 
+}
+
+void GraphicsCommandQueue::ExecuteCommandLists(const vector<ID3D12CommandList*>& commandLists)
+{
+	if (commandLists.empty())
+		return;
+
+	_cmdQueue->ExecuteCommandLists(static_cast<UINT>(commandLists.size()), commandLists.data());
+}
+
 #pragma endregion
 
 #pragma region Compute CommandQueue

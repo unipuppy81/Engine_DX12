@@ -207,12 +207,39 @@ void RenderGraph::Compile()
 
     BuildDependencyGraph();
     SortPasses();
+
+    BuildBarriers();
 }
 
 // ============================================================
 // Execute
 // ============================================================
 
+void RenderGraph::Execute()
+{
+    Compile();
+
+    for (uint32_t passIndex : _executionOrder)
+    {
+        RenderGraphPass& pass = *_passes[passIndex];
+        const auto& barriers = _passBarriers[passIndex];
+
+        if (!barriers.empty())
+        {
+            _cmdList->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+        }
+
+        pass.Execute(_cmdList);
+    }
+
+    // 모든 Barrier/Pass 기록이 끝난 뒤 최종 상태 반영
+    for (RGTextureResource& resource : _textures)
+    {
+        resource.texture->SetResourceState(resource.currentState);
+    }
+}
+
+/*
 void RenderGraph::Execute()
 {
     Compile();
@@ -259,6 +286,7 @@ void RenderGraph::Execute()
         pass.Execute(_cmdList);
     }
 }
+*/
 
 void RenderGraph::ValidatePassResources() const
 {
@@ -287,5 +315,39 @@ void RenderGraph::ValidatePassResources() const
     for (uint32_t i = 0; i < used.size(); ++i)
     {
         assert(used[i] && "Imported RenderGraph resource is never used");
+    }
+}
+
+void RenderGraph::BuildBarriers()
+{
+    _passBarriers.clear();
+    _passBarriers.resize(_passes.size());
+
+    for (uint32_t passIndex : _executionOrder)
+    {
+        RenderGraphPass& pass = *_passes[passIndex];
+        auto& barriers = _passBarriers[passIndex];
+
+        for (const RGPassResource& passResource : pass._resources)
+        {
+            RGTextureResource& resource = _textures[passResource.handle.id];
+
+            D3D12_RESOURCE_STATES requiredState = GetRequiredState(passResource.usage);
+
+            if (resource.currentState == requiredState)
+            {
+                if (requiredState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+                {
+                    barriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(resource.texture->GetTex2D().Get()));
+                }
+
+                continue;
+            }
+
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.texture->GetTex2D().Get(), resource.currentState, requiredState));
+            resource.currentState = requiredState;
+
+            //resource.texture->SetResourceState(requiredState);
+        }
     }
 }

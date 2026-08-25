@@ -62,7 +62,6 @@ void Scene::Render()
 	BakeIBLIfNeeded();
 
 
-	// RenderGraph
 	RenderGraph graph(GRAPHICS_CMD_LIST.Get());
 	
 
@@ -77,7 +76,7 @@ void Scene::Render()
 			builder.Write(rgShadowRT, RGResourceUsage::RenderTarget);
 			builder.Write(rgShadowDepth, RGResourceUsage::DepthWrite);
 		},
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			RenderShadow();
 		});
@@ -103,7 +102,7 @@ void Scene::Render()
 			builder.Write(rgMainDepth, RGResourceUsage::DepthWrite);
 		},
 
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			RenderDeferred();
 		});
@@ -129,7 +128,7 @@ void Scene::Render()
 			builder.Write(rgSpecularLight, RGResourceUsage::RenderTarget);
 		},
 
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			RenderLights();
 		});
@@ -149,7 +148,7 @@ void Scene::Render()
 			builder.Write(rgBackBuffer, RGResourceUsage::RenderTarget);
 		},
 
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			RenderFinal();
 		});
@@ -167,7 +166,7 @@ void Scene::Render()
 			builder.ReadWrite(rgMainDepth, RGResourceUsage::DepthWrite);
 		},
 
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			RenderForward();
 		});
@@ -181,7 +180,7 @@ void Scene::Render()
 				rgBackBuffer,
 				RGResourceUsage::Present);
 		},
-		[&](ID3D12GraphicsCommandList*)
+		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			// 실행할 렌더링 명령
 		});
@@ -195,7 +194,7 @@ void Scene::RenderShadow()
 {
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
 	
-	shadowGroup->OMSetRenderTargets(); 
+	shadowGroup->OMSetRenderTargets();
 	shadowGroup->ClearRenderTargetView();
 
 	for (auto& light : _lights)

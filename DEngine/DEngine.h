@@ -13,6 +13,7 @@
 #include "RenderTargetGroup.h"
 #include "ImGuiManager.h"
 #include "DescriptorAllocator.h"
+#include "RenderGraphExecutor.h"
 
 class DEngine
 {
@@ -74,5 +75,7 @@ private:
 	shared_ptr<DescriptorAllocator> _resourceDescriptorAllocator = make_shared<DescriptorAllocator>();
 	shared_ptr<DescriptorAllocator> _rtvDescriptorAllocator = make_shared<DescriptorAllocator>();
 	shared_ptr<DescriptorAllocator> _dsvDescriptorAllocator = make_shared<DescriptorAllocator>();
+	
+	unique_ptr<RenderGraphExecutor> _renderGraphExecutor = make_unique<RenderGraphExecutor>();
 };
 

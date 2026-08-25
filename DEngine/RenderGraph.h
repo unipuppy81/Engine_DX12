@@ -35,6 +35,28 @@ public:
     void Compile();
     void Execute();
 
+    // ============================
+    // Executor¿ë
+    // ============================
+
+    const vector<uint32_t>& GetExecutionOrder() const
+    {
+        return _executionOrder;
+    }
+
+    RenderGraphPass* GetPass(uint32_t passIndex)
+    {
+        assert(passIndex < _passes.size());
+
+        return _passes[passIndex].get();
+    }
+
+    const vector<D3D12_RESOURCE_BARRIER>& GetPassBarriers(uint32_t passIndex) const
+    {
+        assert(passIndex < _passBarriers.size());
+        return _passBarriers[passIndex];
+    }
+
 private:
 
     void BuildDependencyGraph();
@@ -43,6 +65,9 @@ private:
     D3D12_RESOURCE_STATES GetRequiredState(RGResourceUsage usage) const;
 
     void ValidatePassResources() const;
+
+    void BuildBarriers();
+
 
 private:
 
@@ -61,5 +86,6 @@ private:
     vector<uint32_t> _executionOrder;
 
     unordered_map<Texture*, RGTextureHandle> _importedTextures;
+    vector<vector<D3D12_RESOURCE_BARRIER>> _passBarriers;
 };
 

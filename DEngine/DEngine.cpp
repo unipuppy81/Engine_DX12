@@ -11,6 +11,7 @@
 #include "InstancingManager.h"
 #include "DiagnosticsManager.h"
 #include "IBLManager.h"
+#include "ThreadPool.h"
 
 DEngine::~DEngine()
 {
@@ -23,6 +24,11 @@ void DEngine::Shutdown()
 		return;
 
 	_shutdown = true;
+
+	// 0. CPU Worker 종료
+	// 진행 중인 RenderGraph Record Job까지 끝내고 Thread join
+	if (_renderGraphExecutor)
+		_renderGraphExecutor->Shutdown();
 
 	// 1. 실행 중인 GPU 작업 완료
 	if (_graphicsCmdQueue)
@@ -90,6 +96,25 @@ void DEngine::Init(const WindowInfo& info)
 	// ImGui
 	GET_SINGLE(DiagnosticsManager)->Init();
 	GET_SINGLE(ImGuiManager)->Init(info.hwnd);
+
+
+	// Thread Pool Test
+	_renderGraphExecutor->Init(_graphicsCmdQueue.get());
+
+	/*ThreadPool pool;
+
+	pool.Init(4);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		pool.Enqueue([i]()
+			{
+				printf("Job %d / Thread %zu\n", i,hash<thread::id>{}(this_thread::get_id()));
+			});
+	}
+
+	pool.WaitIdle();
+	pool.Shutdown();*/
 }
 
 void DEngine::Update()
@@ -140,7 +165,7 @@ void DEngine::Render()
 void DEngine::RenderBegin()
 {
 	_graphicsCmdQueue->RenderBegin();
-
+	
 	GET_SINGLE(DiagnosticsManager)->BeginGpuTimer();
 
 }

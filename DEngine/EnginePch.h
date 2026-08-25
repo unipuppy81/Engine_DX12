@@ -13,6 +13,12 @@
 #include <list>
 #include <map>
 #include <sstream>
+#include <atomic>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 using namespace std;
 
 #include <filesystem>
@@ -183,7 +189,7 @@ public:								\
 
 #define CONST_BUFFER(type)	GDEngine->GetConstantBuffer(type)
 
-
+#define COMMAND_CONTEXT_COUNT 4
 
 struct TransformParams
 {
