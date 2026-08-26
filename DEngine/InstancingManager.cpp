@@ -8,6 +8,8 @@
 
 void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 {
+	lock_guard<mutex> lock(_mutex);
+
 	map<uint64, vector<shared_ptr<GameObject>>> cache;
 
 	for (shared_ptr<GameObject>& gameObject : gameObjects)
@@ -50,11 +52,18 @@ void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 
 void InstancingManager::ClearBuffer()
 {
+	lock_guard<mutex> lock(_mutex);
 	for (auto& pair : _buffers)
 	{
 		shared_ptr<InstancingBuffer>& buffer = pair.second;
 		buffer->Clear();
 	}
+}
+
+void InstancingManager::Clear()
+{
+	lock_guard<mutex> lock(_mutex);
+	_buffers.clear();
 }
 
 void InstancingManager::AddParam(uint64 instanceId, InstancingParams& data)

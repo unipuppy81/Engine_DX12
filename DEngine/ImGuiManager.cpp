@@ -88,6 +88,8 @@ void ImGuiManager::Shutdown()
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+
+    _descriptorHeap.Reset();
 }
 
 void ImGuiManager::CreateDescriptorHeap()

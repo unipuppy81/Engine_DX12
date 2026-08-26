@@ -11,12 +11,14 @@ public:
 	void Render(vector<shared_ptr<GameObject>>& gameObjects);
 
 	void ClearBuffer();
-	void Clear() { _buffers.clear(); }
+	void Clear();
 
 private:
 	void AddParam(uint64 instanceId, InstancingParams& data);
 
 private:
+	mutex _mutex;
+
 	map<uint64/*instanceId*/, shared_ptr<InstancingBuffer>> _buffers;
 };
 

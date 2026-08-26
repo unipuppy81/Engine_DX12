@@ -68,6 +68,8 @@ void RenderGraphExecutor::RecordPass(RenderGraphPass* pass, uint32 orderIndex, c
 
     // 이 Worker Thread의 GRAPHICS_CMD_LIST 지정
     ThreadCommandContext::SetGraphicsCommandList(cmdList);
+    
+    GDEngine->GetGraphicsDescHeap()->BeginThreadRecording();
 
     // RootSignature
     cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());

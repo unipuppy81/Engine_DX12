@@ -73,6 +73,11 @@ void GraphicsDescriptorHeap::CommitTable()
 	_threadGroupIndex = INVALID_GROUP_INDEX;
 }
 
+void GraphicsDescriptorHeap::BeginThreadRecording()
+{
+	_threadGroupIndex = INVALID_GROUP_INDEX;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(CBV_REGISTER reg)
 {
 	return GetCPUHandle(static_cast<uint32>(reg));

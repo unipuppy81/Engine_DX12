@@ -12,6 +12,7 @@
 #include "DiagnosticsManager.h"
 #include "IBLManager.h"
 #include "ThreadPool.h"
+#include "ImGuiManager.h"
 
 DEngine::~DEngine()
 {
@@ -24,6 +25,8 @@ void DEngine::Shutdown()
 		return;
 
 	_shutdown = true;
+
+	GET_SINGLE(ImGuiManager)->Shutdown();
 
 	// 0. CPU Worker 종료
 	// 진행 중인 RenderGraph Record Job까지 끝내고 Thread join
