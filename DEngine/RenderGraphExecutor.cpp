@@ -5,10 +5,14 @@
 #include "RenderGraphPass.h"
 #include "RenderGraph.h"
 #include "DEngine.h"
+#include "ThreadCommandContext.h"
 
 void RenderGraphExecutor::Init(GraphicsCommandQueue* graphicsQueue)
 {
     _graphicsQueue = graphicsQueue;
+
+    //_threadPool.Init(1);
+    //return;
 
     uint32 threadCount = thread::hardware_concurrency();
 
@@ -28,7 +32,7 @@ void RenderGraphExecutor::Shutdown()
 
 void RenderGraphExecutor::Record(RenderGraph& renderGraph)
 {
-	const auto& executionOrder = renderGraph.GetExecutionOrder();
+	auto& executionOrder = renderGraph.GetExecutionOrder();
 
 	_recordedCommandLists.clear();
 	_recordedCommandLists.resize(executionOrder.size());
@@ -39,15 +43,12 @@ void RenderGraphExecutor::Record(RenderGraph& renderGraph)
 
         RenderGraphPass* pass = renderGraph.GetPass(passIndex);
 
-        const auto& barriers = renderGraph.GetPassBarriers(passIndex);
+        auto& barriers = renderGraph.GetPassBarriers(passIndex);
 
         _threadPool.Enqueue(
             [this, pass, orderIndex, &barriers]()
             {
-                RecordPass(
-                    pass,
-                    orderIndex,
-                    barriers);
+                RecordPass(pass, orderIndex, barriers);
             });
     }
 
@@ -65,13 +66,23 @@ void RenderGraphExecutor::RecordPass(RenderGraphPass* pass, uint32 orderIndex, c
 	CommandContext* context = _graphicsQueue->AcquireCommandContext();
 	ID3D12GraphicsCommandList* cmdList = context->GetCommandList();
 
-    // 각 CommandList마다 설정 필요
+    // 이 Worker Thread의 GRAPHICS_CMD_LIST 지정
+    ThreadCommandContext::SetGraphicsCommandList(cmdList);
+
+    // RootSignature
     cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
 
-    ID3D12DescriptorHeap* descHeap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
-    cmdList->SetDescriptorHeaps(1, &descHeap);
+    // b0
+    auto globalCB = GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::GLOBAL);
+    cmdList->SetGraphicsRootConstantBufferView(0, GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::GLOBAL)->GetGlobalGpuAddress());
 
-	// RenderGraph Compile 단계에서 이미 계산된 Barrier 기록
+
+    // Descriptor Heap
+    auto graphicsDescHeap = GDEngine->GetGraphicsDescHeap();
+    ID3D12DescriptorHeap* heap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
+    cmdList->SetDescriptorHeaps(1, &heap);
+
+	// barrier
 	if (!barriers.empty())
 	{
 		cmdList->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
@@ -79,7 +90,7 @@ void RenderGraphExecutor::RecordPass(RenderGraphPass* pass, uint32 orderIndex, c
 
     // 실제 Pass 기록
 	pass->Execute(cmdList);
-
+    ThreadCommandContext::ClearGraphicsCommandList();
 	context->Close();
 
 	_recordedCommandLists[orderIndex] = cmdList;

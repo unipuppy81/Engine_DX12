@@ -15,7 +15,7 @@ enum PLANE_TYPE : uint8
 class Frustum
 {
 public:
-	void FinalUpdate();
+	void FinalUpdate(const Matrix& view, const Matrix& projection);
 	bool ContainsSphere(const Vec3& pos, float radius);
 
 private:

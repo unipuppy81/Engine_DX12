@@ -6,6 +6,10 @@ ThreadPool::~ThreadPool()
     Shutdown();
 }
 
+/// <summary>
+/// Thread 를 threadCount 수만큼 생성
+/// </summary>
+/// <param name="threadCount"></param>
 void ThreadPool::Init(uint32 threadCount)
 {
     _stop = false;
@@ -44,7 +48,7 @@ void ThreadPool::Enqueue(function<void()> job)
     {
         lock_guard<mutex> lock(_mutex);
         _jobs.push(move(job));
-    }
+    }   
 
     _condition.notify_one();
 }

@@ -47,6 +47,9 @@ using namespace Microsoft::WRL;
 #include "imgui_impl_dx12.h"
 #include "imgui_impl_win32.h"
 
+// Thread
+#include "ThreadCommandContext.h"
+
 
 // lib
 #pragma comment(lib, "d3d12")
@@ -175,7 +178,7 @@ public:								\
 
 #define DEVICE				GDEngine->GetDevice()->GetDevice()
 #define GRAPHICS_CMD_QUEUE	GDEngine->GetGraphicsCmdQueue()
-#define GRAPHICS_CMD_LIST	GDEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
+#define GRAPHICS_CMD_LIST	ThreadCommandContext::GetGraphicsCommandList() //GDEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
 #define RESOURCE_CMD_LIST	GDEngine->GetGraphicsCmdQueue()->GetResCmdList()
 #define COMPUTE_CMD_LIST	GDEngine->GetComputeCmdQueue()->GetComputeCmdList()
 
@@ -189,7 +192,7 @@ public:								\
 
 #define CONST_BUFFER(type)	GDEngine->GetConstantBuffer(type)
 
-#define COMMAND_CONTEXT_COUNT 4
+#define COMMAND_CONTEXT_COUNT 16
 
 struct TransformParams
 {

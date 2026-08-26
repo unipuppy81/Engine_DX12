@@ -30,8 +30,11 @@ private:
 	uint32					_groupCountPerFrame = 0;		// 프레임당 그룹 수
 	uint32					_totalGroupCount = 0;			// 전체 그룹 수
 	
-	uint32					_currentGroupIndex = 0;
-	uint32					_frameEndGroupIndex = 0;
+	atomic<uint32> _nextGroupIndex = 0;
+	uint32 _frameEndGroupIndex = 0;
+
+	static thread_local uint32 _threadGroupIndex;
+	static constexpr uint32 INVALID_GROUP_INDEX = UINT32_MAX;
 };
 
 // ************************

@@ -36,6 +36,8 @@ public:
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle(uint32 index);
 
+	D3D12_GPU_VIRTUAL_ADDRESS GetGlobalGpuAddress() const { return _globalGpuAddress; }
+
 private:
 	void CreateView();
 
@@ -45,7 +47,8 @@ private:
 
 	// 프레임에서 최대 몇 번 사용할지
 	uint32 _elementCount = 0;
-	uint32 _currentIndex = 0;
+	//uint32 _currentIndex = 0;
+	atomic<uint32> _currentIndex{ 0 };
 
 	// CPU 전용 CBV Descriptor Heap
 	ComPtr<ID3D12DescriptorHeap> _cbvHeap;
@@ -53,5 +56,6 @@ private:
 	uint32 _handleIncrementSize = 0;
 
 	CBV_REGISTER _reg = {};
+	D3D12_GPU_VIRTUAL_ADDRESS _globalGpuAddress = 0;
 };
 

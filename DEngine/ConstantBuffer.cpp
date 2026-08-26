@@ -18,8 +18,9 @@ void ConstantBuffer::Init(CBV_REGISTER reg, uint32 size, uint32 count)
 	// Constant Buffer는 256-byte alignment
 	_elementSize = (size + 255) & ~255;
 	_elementCount = count;
-	_currentIndex = 0;
-
+	// _currentIndex = 0;
+	_currentIndex.store(0);
+	
 	// 실제 Upload Resource는 만들지 않는다.
 	// Descriptor 저장 공간만 생성한다.
 	CreateView();
@@ -53,8 +54,20 @@ void ConstantBuffer::Clear(uint32 frameIndex)
 
 void ConstantBuffer::PushGraphicsData(void* buffer, uint32 size)
 {
-	assert(_currentIndex < _elementCount);
 	assert(_elementSize == ((size + 255) & ~255));
+	
+
+	uint32 index = _currentIndex.fetch_add(1);
+	if (index == 42 && _reg == CBV_REGISTER::b4)
+	{
+		int a = 1;
+
+	}
+
+	DX_LOG(L"CB reg=" << static_cast<int>(_reg)
+		<< L" index=" << index
+		<< L" count=" << _elementCount);
+	assert(index < _elementCount);
 
 	UploadAllocator& allocator = GRAPHICS_CMD_QUEUE->GetCurrentUploadAllocator();
 
@@ -69,13 +82,13 @@ void ConstantBuffer::PushGraphicsData(void* buffer, uint32 size)
 	cbvDesc.BufferLocation = allocation.gpuAddress;
 	cbvDesc.SizeInBytes = _elementSize;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(_currentIndex);
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(index);
 	DEVICE->CreateConstantBufferView(&cbvDesc, cpuHandle);
 
 	// 기존 GraphicsDescriptorHeap 구조 그대로 사용
 	GDEngine->GetGraphicsDescHeap()->SetCBV(cpuHandle, _reg);
 
-	_currentIndex++;
+	// _currentIndex++;
 
 }
 
@@ -88,12 +101,19 @@ void ConstantBuffer::SetGraphicsGlobalData(void* buffer, uint32 size)
 
 	::memcpy(allocation.cpuAddress, buffer, size);
 
+	// 주소 보관
+	_globalGpuAddress = allocation.gpuAddress;
+
 	// b0은 기존대로 Root CBV 사용
 	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(0, allocation.gpuAddress);
 }
 
 void ConstantBuffer::PushComputeData(void* buffer, uint32 size)
 {
+	DX_LOG(L"[PushComputeData] reg=" << static_cast<int>(_reg)
+		<< L" index=" << _currentIndex.load()
+		<< L" count=" << _elementCount);
+
 	assert(_currentIndex < _elementCount);
 	assert(_elementSize == ((size + 255) & ~255));
 
@@ -117,6 +137,10 @@ void ConstantBuffer::PushComputeData(void* buffer, uint32 size)
 
 D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::GetCpuHandle(uint32 index)
 {
+	DX_LOG(L"[GetCpuHandle] reg=" << static_cast<int>(_reg)
+		<< L" index=" << index
+		<< L" count=" << _elementCount);
+
 	assert(index < _elementCount);
 
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(_cpuHandleBegin, index * _handleIncrementSize);

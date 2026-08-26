@@ -6,8 +6,9 @@
 class RenderGraph
 {
 public:
+    RenderGraph() = default;
 
-    explicit RenderGraph(ID3D12GraphicsCommandList* cmdList) : _cmdList(cmdList) { }
+    //    explicit RenderGraph(ID3D12GraphicsCommandList* cmdList) : _cmdList(cmdList) { }
 
     // --------------------------------------------------------
     // 기존 Texture를 RenderGraph에 등록
@@ -34,6 +35,7 @@ public:
 
     void Compile();
     void Execute();
+    void CommitResourceStates();
 
     // ============================
     // Executor용
@@ -71,7 +73,7 @@ private:
 
 private:
 
-    ID3D12GraphicsCommandList* _cmdList = nullptr;
+    // ID3D12GraphicsCommandList* _cmdList = nullptr;
 
     // 등록된 Pass
     vector<unique_ptr<RenderGraphPass>> _passes;

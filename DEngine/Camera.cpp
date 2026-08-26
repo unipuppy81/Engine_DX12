@@ -13,8 +13,8 @@
 
 #include <iostream>
 
-Matrix Camera::S_MatView;
-Matrix Camera::S_MatProjection;
+thread_local Matrix Camera::S_MatView;
+thread_local Matrix Camera::S_MatProjection;
 
 Camera::Camera() : Component(COMPONENT_TYPE::CAMERA)
 {
@@ -37,7 +37,7 @@ void Camera::FinalUpdate()
 	else
 		_matProjection = ::XMMatrixOrthographicLH(_width * _scale, _height * _scale, _near, _far);
 
-	_frustum.FinalUpdate();
+	_frustum.FinalUpdate(_matView, _matProjection);
 }
 
 void Camera::SortGameObject()

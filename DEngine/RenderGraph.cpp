@@ -226,13 +226,22 @@ void RenderGraph::Execute()
 
         if (!barriers.empty())
         {
-            _cmdList->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+            GRAPHICS_CMD_LIST->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
         }
 
-        pass.Execute(_cmdList);
+        pass.Execute(GRAPHICS_CMD_LIST);
     }
 
     // 모든 Barrier/Pass 기록이 끝난 뒤 최종 상태 반영
+    for (RGTextureResource& resource : _textures)
+    {
+        resource.texture->SetResourceState(resource.currentState);
+    }
+}
+
+
+void RenderGraph::CommitResourceStates()
+{
     for (RGTextureResource& resource : _textures)
     {
         resource.texture->SetResourceState(resource.currentState);

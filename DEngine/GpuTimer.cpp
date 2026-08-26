@@ -37,7 +37,7 @@ void GpuTimer::Init()
 
 void GpuTimer::Begin()
 {
-	GRAPHICS_CMD_LIST.Get()->EndQuery(
+	GRAPHICS_CMD_LIST->EndQuery(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
 		0
@@ -46,7 +46,7 @@ void GpuTimer::Begin()
 
 void GpuTimer::End()
 {
-	GRAPHICS_CMD_LIST.Get()->EndQuery(
+	GRAPHICS_CMD_LIST->EndQuery(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
 		1
@@ -55,7 +55,7 @@ void GpuTimer::End()
 
 void GpuTimer::Resolve()
 {
-	GRAPHICS_CMD_LIST.Get()->ResolveQueryData(
+	GRAPHICS_CMD_LIST->ResolveQueryData(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
 		0,

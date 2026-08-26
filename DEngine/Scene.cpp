@@ -59,11 +59,14 @@ shared_ptr<class Camera> Scene::GetMainCamera()
 void Scene::Render()
 {
 	PushLightData();
-	BakeIBLIfNeeded();
+	// BakeIBLIfNeeded();
 
+	RenderAll();
+}
 
-	RenderGraph graph(GRAPHICS_CMD_LIST.Get());
-	
+void Scene::RenderAll()
+{
+	RenderGraph graph;
 
 	// Shadow
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
@@ -98,7 +101,7 @@ void Scene::Render()
 			builder.Write(rgGBuffer1, RGResourceUsage::RenderTarget);
 			builder.Write(rgGBuffer2, RGResourceUsage::RenderTarget);
 			builder.Write(rgGBuffer3, RGResourceUsage::RenderTarget);
-			
+
 			builder.Write(rgMainDepth, RGResourceUsage::DepthWrite);
 		},
 
@@ -173,22 +176,31 @@ void Scene::Render()
 
 
 	// Present
+	/*
 	graph.AddPass("Present",
 		[&](RenderGraphBuilder& builder)
 		{
-			builder.Write(
-				rgBackBuffer,
-				RGResourceUsage::Present);
+			builder.Write(rgBackBuffer, RGResourceUsage::Present);
 		},
 		[&](ID3D12GraphicsCommandList* cmdList)
 		{
 			// 실행할 렌더링 명령
 		});
+	*/
 
+	//graph.Execute();
+	//return;
 
-	graph.Execute();
+	// 1. 의존성 / 순서 / Barrier Compile
+	graph.Compile();
+
+	// 2. 각 pass 를 worker 에게 보내 commandlist 기록
+	GDEngine->GetRenderGraphExecutor()->Record(graph);
+	GDEngine->GetRenderGraphExecutor()->Submit();
+
+	// 제출된 RenderGraph의 최종 Resource State 반영
+	graph.CommitResourceStates();
 }
-
 
 void Scene::RenderShadow()
 {
@@ -273,6 +285,10 @@ void Scene::RenderFinal()
 
 void Scene::RenderForward()
 {
+	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
+	auto swapChainGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
+	swapChainGroup->OMSetRenderTargets(1, backIndex);
+
 	shared_ptr<Camera> mainCamera = _cameras[0];
 
 	for (auto& camera : _cameras)

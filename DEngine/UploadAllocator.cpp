@@ -57,8 +57,9 @@ uint64 UploadAllocator::AlignUp(uint64 value, uint64 alignment)
 
 UploadAllocation UploadAllocator::Allocate(uint64 size, uint64 alignment)
 {
-    uint64 alignedOffset = AlignUp(_offset, alignment);
+    lock_guard<mutex> lock(_mutex);
 
+    uint64 alignedOffset = AlignUp(_offset, alignment);
     uint64 endOffset = alignedOffset + size;
     assert(endOffset <= _capacity);
 

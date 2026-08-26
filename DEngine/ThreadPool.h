@@ -18,7 +18,7 @@ private:
 
 private:
     vector<thread> _workers;
-    queue<std::function<void()>> _jobs;
+    queue<function<void()>> _jobs;
 
     mutex _mutex;
     condition_variable _condition;

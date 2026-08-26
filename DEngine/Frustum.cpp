@@ -3,10 +3,10 @@
 #include "Camera.h"
 
 
-void Frustum::FinalUpdate()
+void Frustum::FinalUpdate(const Matrix& view, const Matrix& projection)
 {
-	Matrix matViewInv = Camera::S_MatView.Invert();
-	Matrix matProjectionInv = Camera::S_MatProjection.Invert();
+	Matrix matViewInv = view.Invert();
+	Matrix matProjectionInv = projection.Invert();
 	Matrix matInv = matProjectionInv * matViewInv;
 
 	vector<Vec3> worldPos =

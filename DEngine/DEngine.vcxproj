@@ -214,6 +214,7 @@
     <ClInclude Include="TestCameraScript.h" />
     <ClInclude Include="TestDragon.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="ThreadCommandContext.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Transform.h" />
@@ -296,6 +297,7 @@
     <ClCompile Include="TestCameraScript.cpp" />
     <ClCompile Include="TestDragon.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="ThreadCommandContext.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Transform.cpp" />

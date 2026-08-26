@@ -14,6 +14,7 @@ Material::~Material()
 
 void Material::PushGraphicsData()
 {
+	DX_LOG(L"CMDLISTTEST MATERIAL CMD = " << GRAPHICS_CMD_LIST);
 	// CBV 업로드
 	// 기존 MaterialParams -> b2
 	CONST_BUFFER(CONSTANT_BUFFER_TYPE::MATERIAL)->PushGraphicsData(&_params, sizeof(_params));

@@ -41,6 +41,8 @@ public:
 	shared_ptr<DescriptorAllocator> GetRTVDescriptorAllocator() { return _rtvDescriptorAllocator; }
 	shared_ptr<DescriptorAllocator> GetDSVDescriptorAllocator() { return _dsvDescriptorAllocator; }
 
+	RenderGraphExecutor* GetRenderGraphExecutor() { return _renderGraphExecutor.get(); }
+
 public:
 	void Render();
 	void RenderBegin();

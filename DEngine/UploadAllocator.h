@@ -25,6 +25,8 @@ private:
     static uint64 AlignUp(uint64 value, uint64 alignment);
 
 private:
+    mutex _mutex;
+
     ComPtr<ID3D12Resource> _uploadBuffer;
 
     BYTE* _mappedAddress = nullptr;
@@ -33,5 +35,6 @@ private:
     uint64 _offset = 0;
 
     D3D12_GPU_VIRTUAL_ADDRESS _gpuBaseAddress = 0;
+
 };
 

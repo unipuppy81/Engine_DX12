@@ -22,7 +22,9 @@ void IBLManager::CreateEnvironmentCube()
     assert(_environmentMap);
     assert(material);
 
-    ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
+    ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
+
+    DX_LOG(L"CMDLISTTEST IBL CMD = " << cmdList);
 
     D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _environmentMap->GetTex2D().Get(),
@@ -82,6 +84,7 @@ void IBLManager::CreateEnvironmentCube()
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     cmdList->ResourceBarrier(1, &barrier);
+    _environmentMap->SetResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 void IBLManager::CreateIrradianceMap()
@@ -96,7 +99,7 @@ void IBLManager::CreateIrradianceMap()
       
     material->SetTexture(0, _environmentMap);
 
-    ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
+    ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
 
     D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _irradianceMap->GetTex2D().Get(),
@@ -157,6 +160,7 @@ void IBLManager::CreateIrradianceMap()
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     cmdList->ResourceBarrier(1, &barrier);
+    _irradianceMap->SetResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 void IBLManager::CreatePrefilteredMap()
@@ -170,7 +174,7 @@ void IBLManager::CreatePrefilteredMap()
 
     material->SetTexture(0, _environmentMap);
 
-    ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
+    ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
 
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _prefilteredMap->GetTex2D().Get(),
@@ -180,7 +184,8 @@ void IBLManager::CreatePrefilteredMap()
     cmdList->ResourceBarrier(1, &barrier);
 
     const uint32 baseSize = _prefilteredMap->GetWidth();
-    const uint32 mipLevels = _prefilteredMap->GetMipLevels();
+    //const uint32 mipLevels = _prefilteredMap->GetMipLevels();
+    const uint32 mipLevels = IBLConfig::PrefilterMipLevels;
 
     const float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 
@@ -240,6 +245,8 @@ void IBLManager::CreatePrefilteredMap()
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     cmdList->ResourceBarrier(1, &barrier);
+    _prefilteredMap->SetResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
 }
 
 void IBLManager::CreateBRDFLUT()
@@ -250,7 +257,7 @@ void IBLManager::CreateBRDFLUT()
     assert(_brdfLUT);
     assert(material);
 
-    ComPtr<ID3D12GraphicsCommandList> cmdList = GRAPHICS_CMD_LIST;
+    ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
 
     auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _brdfLUT->GetTex2D().Get(),
@@ -292,4 +299,6 @@ void IBLManager::CreateBRDFLUT()
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     cmdList->ResourceBarrier(1, &barrier);
+    _brdfLUT->SetResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
 }

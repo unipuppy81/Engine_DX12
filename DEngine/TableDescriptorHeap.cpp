@@ -2,6 +2,8 @@
 #include "TableDescriptorHeap.h"
 #include "DEngine.h"
 
+thread_local uint32 GraphicsDescriptorHeap::_threadGroupIndex = GraphicsDescriptorHeap::INVALID_GROUP_INDEX;
+
 #pragma region Graphics DescriptorHeap
 
 // ************************
@@ -33,8 +35,9 @@ void GraphicsDescriptorHeap::Clear(uint32 frameIndex)
 
 	const uint32 startGroupIndex = frameIndex * _groupCountPerFrame;
 
-	_currentGroupIndex = startGroupIndex;
+	_nextGroupIndex.store(startGroupIndex);
 	_frameEndGroupIndex = startGroupIndex + _groupCountPerFrame;
+	_threadGroupIndex = INVALID_GROUP_INDEX;
 }
 
 void GraphicsDescriptorHeap::SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg)
@@ -57,12 +60,17 @@ void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_R
 
 void GraphicsDescriptorHeap::CommitTable()
 {
-	assert(_currentGroupIndex < _frameEndGroupIndex);
+	assert(_threadGroupIndex != INVALID_GROUP_INDEX);
 
+	ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
+	DX_LOG(L"CMDLISTTEST DESC CMD = " << GRAPHICS_CMD_LIST);
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = _descHeap->GetGPUDescriptorHandleForHeapStart();
-	handle.ptr += static_cast<UINT64>(_currentGroupIndex) * _groupSize;
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, handle);
-	++_currentGroupIndex;
+
+	handle.ptr += static_cast<UINT64>(_threadGroupIndex) * _groupSize;
+
+	cmdList->SetGraphicsRootDescriptorTable(1, handle);
+
+	_threadGroupIndex = INVALID_GROUP_INDEX;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(CBV_REGISTER reg)
@@ -79,11 +87,18 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(uint8 reg)
 {
 	assert(reg > 0);
 	assert(reg < CBV_SRV_REGISTER_COUNT);
-	assert(_currentGroupIndex < _frameEndGroupIndex);
+
+	if (_threadGroupIndex == INVALID_GROUP_INDEX)
+	{
+		_threadGroupIndex = _nextGroupIndex.fetch_add(1);
+
+		assert(_threadGroupIndex < _frameEndGroupIndex);
+	}
+
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = _descHeap->GetCPUDescriptorHandleForHeapStart();
 
-	handle.ptr += static_cast<SIZE_T>(_currentGroupIndex) * _groupSize;
+	handle.ptr += static_cast<SIZE_T>(_threadGroupIndex) * _groupSize;
 	handle.ptr += static_cast<SIZE_T>(reg - 1) * _handleSize;
 
 	return handle;

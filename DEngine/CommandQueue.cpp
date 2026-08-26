@@ -3,7 +3,7 @@
 #include "SwapChain.h"
 #include "DEngine.h"
 #include "CommandContext.h"
-
+#include "ThreadCommandContext.h"
 
 #pragma region Graphics CommandQueue
 
@@ -113,6 +113,8 @@ void GraphicsCommandQueue::BeginInitCommands()
 	GDEngine->GetGraphicsDescHeap()->Clear(0);
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear(0);
 
+	DX_LOG(L"CMDLISTTEST INIT CMD = " << _cmdList.Get());
+	ThreadCommandContext::SetGraphicsCommandList(_cmdList.Get());
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
 
 	ID3D12DescriptorHeap* heap = GDEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
@@ -124,6 +126,7 @@ void GraphicsCommandQueue::EndInitCommands()
 	_cmdList->Close();
 
 	ID3D12CommandList* lists[] = { _cmdList.Get() };
+	ThreadCommandContext::ClearGraphicsCommandList();
 	_cmdQueue->ExecuteCommandLists(1, lists);
 
 	WaitSync();
@@ -147,7 +150,8 @@ void GraphicsCommandQueue::RenderBegin()
 	_currentFrame->cmdAllocator->Reset();
 	_currentFrame->uploadAllocator.Reset();
 	_cmdList->Reset(_currentFrame->cmdAllocator.Get(), nullptr);
-
+	// Main Thread에서 GRAPHICS_CMD_LIST가 기존 _cmdList를 가리키게 함
+	ThreadCommandContext::SetGraphicsCommandList(_cmdList.Get());
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
 
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::GLOBAL)->Clear(_currentFrameIndex);
@@ -163,6 +167,44 @@ void GraphicsCommandQueue::RenderBegin()
 	_cmdList->SetDescriptorHeaps(1, &descHeap); 	// 무거운 연산이므로 프레임당 한 번만 하는게 좋음
 }
 
+void GraphicsCommandQueue::RenderEnd()
+{
+	int8 backIndex = _swapChain->GetBackBufferIndex();
+	auto backBuffer = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex);
+
+	// ImGui까지 모두 기록한 후 최종 Present 상태로 전환
+	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			backBuffer->GetTex2D().Get(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT);
+
+	_cmdList->ResourceBarrier(1, &barrier);
+	backBuffer->SetResourceState(D3D12_RESOURCE_STATE_PRESENT);
+	_cmdList->Close();
+
+	ID3D12CommandList* cmdListArr[] =
+	{
+		_cmdList.Get()
+	};
+
+
+	ThreadCommandContext::ClearGraphicsCommandList();
+
+	// RenderGraph CommandList들은 이미 Executor::Submit()에서 먼저 제출됨
+	// 여기서는 ImGui / GPU Profiler 등이 기록된 기존 CommandList 제출
+	_cmdQueue->ExecuteCommandLists(1, cmdListArr);
+
+	_swapChain->Present();
+
+	const uint64 fenceValue = Signal();
+	_currentFrame->fenceValue = fenceValue;
+
+	_deferredReleaseQueue.Commit(fenceValue);
+
+	_swapChain->SwapIndex();
+}
+
+/*
 void GraphicsCommandQueue::RenderEnd()
 {
 	_cmdList->Close();	
@@ -184,6 +226,7 @@ void GraphicsCommandQueue::RenderEnd()
 
 	_swapChain->SwapIndex();
 }
+*/
 
 void GraphicsCommandQueue::FlushResourceCommandQueue()
 {
@@ -231,6 +274,7 @@ void GraphicsCommandQueue::DeferredFreeDescriptor(shared_ptr<DescriptorAllocator
 CommandContext* GraphicsCommandQueue::AcquireCommandContext() 
 {
 	uint32 index = _currentFrame->commandContextIndex.fetch_add(1); 
+	DX_LOG(L"[CommandContext] index=" << index << L" / size=" << _currentFrame->commandContexts.size());
 	assert(index < _currentFrame->commandContexts.size()); 
 	CommandContext& context = _currentFrame->commandContexts[index]; 
 	context.Reset(); 

@@ -73,7 +73,7 @@ private:
 
 public:
 	// TEMP
-	static Matrix S_MatView;
-	static Matrix S_MatProjection;
+	static thread_local Matrix S_MatView;
+	static thread_local Matrix S_MatProjection;
 };
 

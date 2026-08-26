@@ -17,6 +17,8 @@ public:
 
 	void Render();
 
+	void RenderAll();
+
 	void RenderShadow();
 	void RenderDeferred();
 	void RenderLights();

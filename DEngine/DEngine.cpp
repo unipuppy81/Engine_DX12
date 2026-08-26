@@ -98,7 +98,7 @@ void DEngine::Init(const WindowInfo& info)
 	GET_SINGLE(ImGuiManager)->Init(info.hwnd);
 
 
-	// Thread Pool Test
+	// RenderGraph Executor / Worker Thread Init
 	_renderGraphExecutor->Init(_graphicsCmdQueue.get());
 
 	/*ThreadPool pool;

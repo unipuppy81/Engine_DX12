@@ -80,7 +80,7 @@ void ImGuiManager::Render()
     GRAPHICS_CMD_LIST->SetDescriptorHeaps(1, heaps);
 
     // ImGui DrawData ·»´õ¸µ
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRAPHICS_CMD_LIST.Get());
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRAPHICS_CMD_LIST);
 }
 
 void ImGuiManager::Shutdown()
