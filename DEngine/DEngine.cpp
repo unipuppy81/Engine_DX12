@@ -69,7 +69,7 @@ void DEngine::Init(const WindowInfo& info)
 	_rootSignature->Init();
 
 	// 프레임별 임시 Shader Visible Heap
-	_graphicsDescHeap->Init(256);
+	_graphicsDescHeap->Init(4096);
 	_computeDescHeap->Init();
 
 	// 정적 CPU Descriptor Heap
@@ -78,9 +78,9 @@ void DEngine::Init(const WindowInfo& info)
 	_dsvDescriptorAllocator->Init(_device->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 512);
 
 	CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
-	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
-	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
-	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 256);
+	CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 4096);
+	CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 4096);
+	CreateConstantBuffer(CBV_REGISTER::b3, sizeof(PBRMaterialParams), 4096);
 	CreateConstantBuffer(CBV_REGISTER::b4, sizeof(IBLCubemapParams), IBLConfig::CubemapCBCount);
 	CreateConstantBuffer(CBV_REGISTER::b5, sizeof(CameraParams), 1);
 

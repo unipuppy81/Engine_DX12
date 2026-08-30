@@ -35,6 +35,8 @@ void MeshRenderer::Render()
 			continue;
 
 		GetTransform()->PushData();
+		material->SetInt(0, 0);
+		material->SetInt(1, 0);
 
 		if (GetAnimator())
 		{
@@ -57,7 +59,9 @@ void MeshRenderer::Render(shared_ptr<InstancingBuffer>& buffer)
 			continue;
 
 		buffer->PushData();
-		
+		material->SetInt(0, 1);
+		material->SetInt(1, 0);
+
 		if (GetAnimator())
 		{
 			GetAnimator()->PushData();

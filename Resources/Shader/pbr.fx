@@ -51,7 +51,8 @@ PS_PBR_OUT PS_PBR(VS_PBR_OUT input)
 {
     PS_PBR_OUT output = (PS_PBR_OUT) 0;
 
-    float4 albedo = g_tex_0.Sample(g_sam_0, input.uv) * g_baseColor;
+    float4 albedo = g_baseColor;
+    // float4 albedo = g_tex_0.Sample(g_sam_0, input.uv) * g_baseColor;
 
     output.position = float4(input.viewPos, 1.f);
     output.normal = float4(normalize(input.viewNormal), 1.f);
@@ -61,8 +62,8 @@ PS_PBR_OUT PS_PBR(VS_PBR_OUT input)
     // y = roughness
     // z = ao
     // w = shadingModel, 1 = PBR
-    //output.materialInfo = float4(g_metallic, g_roughness, g_ao, 1.f);
-    output.materialInfo = float4(1.f, 0.f, 1.f, 1.f);
+    output.materialInfo = float4(g_metallic, g_roughness, g_ao, 1.f);
+    
     return output;
 }
 
@@ -126,7 +127,7 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     float metallic = saturate(materialInfo.x);
     float roughness = max(saturate(materialInfo.y), 0.04f);
     float ao = saturate(materialInfo.z);
-    float lightIntensity = 1.0f;
+    float lightIntensity = 2.0f;
     
     
     // ºñ±Ý¼Ó
@@ -232,7 +233,11 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
     float3 directDiffuse = g_tex_1.Sample(g_sam_0, input.uv).rgb;
     float3 directSpecular = g_tex_2.Sample(g_sam_0, input.uv).rgb;
     float4 materialInfo = g_tex_3.Sample(g_sam_0, input.uv);
-
+    
+    float3 result2 = directDiffuse + directSpecular;
+    
+    
+    
     float shadingModel = materialInfo.w;
 
     if (shadingModel < 0.5f)
@@ -283,8 +288,8 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
 
     result = result / (result + 1.f);
     result = pow(result, 1.f / 2.2f);
-    return float4(prefilteredColor, 1.f);
-    return float4(result, 1.f);
+
+    return float4(result2, 1.f);
 }
 
 #endif
