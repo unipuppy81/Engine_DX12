@@ -119,10 +119,14 @@ void Light::SetLightType(LIGHT_TYPE type)
 		_lightMaterial = GET_SINGLE(Resources)->Get<Material>(L"DirLight");
 		_pbrLightMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_DirLight");
 
+		_shadowCamera->GetCamera()->SetProjectionType(PROJECTION_TYPE::ORTHOGRAPHIC); 
 		_shadowCamera->GetCamera()->SetScale(1.f);
-		_shadowCamera->GetCamera()->SetFar(10000.f);
-		_shadowCamera->GetCamera()->SetWidth(4096);
-		_shadowCamera->GetCamera()->SetHeight(4096);
+
+		_shadowCamera->GetCamera()->SetWidth(1000.f);
+		_shadowCamera->GetCamera()->SetHeight(1000.f);
+
+		_shadowCamera->GetCamera()->SetNear(1.f);
+		_shadowCamera->GetCamera()->SetFar(3000.f);
 		break;
 	case LIGHT_TYPE::POINT_LIGHT:
 		_volumeMesh = GET_SINGLE(Resources)->Get<Mesh>(L"Sphere");

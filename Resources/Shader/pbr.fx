@@ -51,8 +51,8 @@ PS_PBR_OUT PS_PBR(VS_PBR_OUT input)
 {
     PS_PBR_OUT output = (PS_PBR_OUT) 0;
 
-    float4 albedo = g_baseColor;
-    // float4 albedo = g_tex_0.Sample(g_sam_0, input.uv) * g_baseColor;
+    //float4 albedo = g_baseColor;
+    float4 albedo = g_tex_0.Sample(g_sam_0, input.uv) * g_baseColor;
 
     output.position = float4(input.viewPos, 1.f);
     output.normal = float4(normalize(input.viewNormal), 1.f);
@@ -127,7 +127,7 @@ PS_LIGHT_OUT PS_DirLight(VS_SCREEN_OUT input)
     float metallic = saturate(materialInfo.x);
     float roughness = max(saturate(materialInfo.y), 0.04f);
     float ao = saturate(materialInfo.z);
-    float lightIntensity = 2.0f;
+    float lightIntensity = 1.0f;
     
     
     // ºñ±Ý¼Ó
@@ -289,7 +289,7 @@ float4 PS_Final(VS_SCREEN_OUT input) : SV_Target
     result = result / (result + 1.f);
     result = pow(result, 1.f / 2.2f);
 
-    return float4(result2, 1.f);
+    return float4(result, 1.f);
 }
 
 #endif

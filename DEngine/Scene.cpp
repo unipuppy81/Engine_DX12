@@ -8,6 +8,7 @@
 #include "Resources.h"
 #include "RenderGraph.h"
 #include "DiagnosticsManager.h"
+#include "Animator.h"
 
 void Scene::Awake()
 {
@@ -60,7 +61,15 @@ shared_ptr<class Camera> Scene::GetMainCamera()
 void Scene::Render()
 {
 	PushLightData();
-	// BakeIBLIfNeeded();
+	
+	// RenderGraph 멀티스레드 Record 전에
+	// Animation Compute를 프레임당 한 번 수행
+
+	for (auto& gameObject : _gameObjects)
+	{
+		if (gameObject->GetAnimator())
+			gameObject->GetAnimator()->UpdateBoneMatrix();
+	}
 
 	RenderAll();
 }

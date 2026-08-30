@@ -36,7 +36,11 @@ void MeshRenderer::Render()
 
 		GetTransform()->PushData();
 		material->SetInt(0, 0);
-		material->SetInt(1, 0);
+
+		if (GetGameObject()->GetTerrain() == nullptr)
+		{
+			material->SetInt(1, 0);
+		}
 
 		if (GetAnimator())
 		{
@@ -75,9 +79,25 @@ void MeshRenderer::Render(shared_ptr<InstancingBuffer>& buffer)
 
 void MeshRenderer::RenderShadow()
 {
-	GetTransform()->PushData();
-	GET_SINGLE(Resources)->Get<Material>(L"Shadow")->PushGraphicsData();
-	_mesh->Render();
+	shared_ptr<Material> shadowMaterial = GET_SINGLE(Resources)->Get<Material>(L"Shadow");
+
+	for (uint32 i = 0; i < _materials.size(); ++i)
+	{
+		// SubMesh마다 Descriptor Table 새로 구성
+		GetTransform()->PushData();
+
+		shadowMaterial->SetInt(1, 0);
+
+		if (GetAnimator())
+		{
+			GetAnimator()->PushData();
+			shadowMaterial->SetInt(1, 1);
+		}
+
+		shadowMaterial->PushGraphicsData();
+
+		_mesh->Render(1, i);
+	}
 }
 
 uint64 MeshRenderer::GetInstanceID()

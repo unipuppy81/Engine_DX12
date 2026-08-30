@@ -226,11 +226,11 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 	{
 		{
 			// shared_ptr<GameObject> obj = make_shared<GameObject>();
-			// obj->SetName(L"OBJ_TYPE_A");
+			// obj->SetName(L"OBJ_TYPE_A"); 
 			// obj->AddComponent(make_shared<Transform>());
 			// obj->AddComponent(make_shared<SphereCollider>());
-			// obj->GetTransform()->SetLocalScale(Vec3(30.f, 30.f, 30.f));
-			// obj->GetTransform()->SetLocalPosition(Vec3(-25.0f, 0.f, 300.f));
+			// obj->GetTransform()->SetLocalPosition(Vec3(0.f, 100.f, 500.f));
+			// obj->GetTransform()->SetLocalScale(Vec3(100.f, 100.f, 100.f));
 			// obj->SetStatic(false);
 			// shared_ptr<MeshRenderer> meshRenderer = make_shared<MeshRenderer>();
 			// {
@@ -351,46 +351,46 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 		// roughness / metallic
 		{
-			shared_ptr<Mesh> sphereMesh = GET_SINGLE(Resources)->LoadSphereMesh();
-			shared_ptr<Material> baseMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_GameObject");
-
-			const int count = 5;
-			const float spacing = 20.f;
-
-			for (int y = 0; y < count; ++y)
-			{
-				for (int x = 0; x < count; ++x)
-				{
-					shared_ptr<GameObject> obj = make_shared<GameObject>();
-
-					obj->SetName(L"PBR_Sphere");
-					obj->AddComponent(make_shared<Transform>());
-
-					obj->GetTransform()->SetLocalScale(Vec3(12.f, 12.f, 12.f));
-					obj->GetTransform()->SetLocalPosition(Vec3(-70.f + x * spacing, 70.f - y * spacing, 300.f));
-
-					obj->SetStatic(false);
-					obj->SetCheckFrustum(true);
-
-					shared_ptr<MeshRenderer> renderer = make_shared<MeshRenderer>();
-					renderer->SetMesh(sphereMesh);
-
-					shared_ptr<Material> material = baseMaterial->Clone();
-					material->SetPBRBaseColor(Vec4(0.9f, 0.5f, 0.25f, 1.f));
-					
-					float metallic = static_cast<float>(x) / (count - 1);
-					float roughness = static_cast<float>(y) / (count - 1);
-
-					material->SetPBRMetallic(metallic);
-					material->SetPBRRoughness(roughness);
-					material->SetPBRAO(1.0f);
-
-					renderer->SetMaterial(material);
-
-					obj->AddComponent(renderer);
-					scene->AddGameObject(obj);
-				}
-			}
+			// shared_ptr<Mesh> sphereMesh = GET_SINGLE(Resources)->LoadSphereMesh();
+			// shared_ptr<Material> baseMaterial = GET_SINGLE(Resources)->Get<Material>(L"PBR_GameObject");
+			// 
+			// const int count = 5;
+			// const float spacing = 20.f;
+			// 
+			// for (int y = 0; y < count; ++y)
+			// {
+			// 	for (int x = 0; x < count; ++x)
+			// 	{
+			// 		shared_ptr<GameObject> obj = make_shared<GameObject>();
+			// 
+			// 		obj->SetName(L"PBR_Sphere");
+			// 		obj->AddComponent(make_shared<Transform>());
+			// 
+			// 		obj->GetTransform()->SetLocalScale(Vec3(12.f, 12.f, 12.f));
+			// 		obj->GetTransform()->SetLocalPosition(Vec3(-70.f + x * spacing, 70.f - y * spacing, 300.f));
+			// 
+			// 		obj->SetStatic(false);
+			// 		obj->SetCheckFrustum(true);
+			// 
+			// 		shared_ptr<MeshRenderer> renderer = make_shared<MeshRenderer>();
+			// 		renderer->SetMesh(sphereMesh);
+			// 
+			// 		shared_ptr<Material> material = baseMaterial->Clone();
+			// 		material->SetPBRBaseColor(Vec4(0.9f, 0.5f, 0.25f, 1.f));
+			// 		
+			// 		float metallic = static_cast<float>(x) / (count - 1);
+			// 		float roughness = static_cast<float>(y) / (count - 1);
+			// 
+			// 		material->SetPBRMetallic(metallic);
+			// 		material->SetPBRRoughness(roughness);
+			// 		material->SetPBRAO(1.0f);
+			// 
+			// 		renderer->SetMaterial(material);
+			// 
+			// 		obj->AddComponent(renderer);
+			// 		scene->AddGameObject(obj);
+			// 	}
+			// }
 		}
 
 		
@@ -421,23 +421,24 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 #pragma region Terrain
 	{
-		// shared_ptr<GameObject> obj = make_shared<GameObject>();
-		// obj->AddComponent(make_shared<Transform>());
-		// obj->AddComponent(make_shared<Terrain>());
-		// obj->AddComponent(make_shared<MeshRenderer>());
-		// 
-		// obj->GetTransform()->SetLocalScale(Vec3(50.f, 250.f, 50.f));
-		// obj->GetTransform()->SetLocalPosition(Vec3(-100.f, -200.f, 300.f));
-		// obj->SetStatic(true);
-		// obj->GetTerrain()->Init(64, 64);
-		// obj->SetCheckFrustum(false);
-		// 
-		// scene->AddGameObject(obj);
+		shared_ptr<GameObject> obj = make_shared<GameObject>();
+		obj->AddComponent(make_shared<Transform>());
+		obj->AddComponent(make_shared<Terrain>());
+		obj->AddComponent(make_shared<MeshRenderer>());
+		
+		obj->GetTransform()->SetLocalScale(Vec3(50.f, 250.f, 50.f));
+		obj->GetTransform()->SetLocalPosition(Vec3(-100.f, -200.f, 300.f));
+		//obj->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 0.f));
+		obj->SetStatic(true);
+		obj->GetTerrain()->Init(64, 64);
+		obj->SetCheckFrustum(false);
+		
+		scene->AddGameObject(obj);
 	}
 #pragma endregion
 
 #pragma region UI_Test
-	for (int32 i = 0; i < 5; i++)
+	for (int32 i = 0; i < 6; i++)
 	{
 		shared_ptr<GameObject> obj = make_shared<GameObject>();
 		obj->SetLayerIndex(GET_SINGLE(SceneManager)->LayerNameToIndex(L"UI")); // UI
@@ -484,61 +485,63 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 #pragma endregion
 
 #pragma region Directional Light
+	// 위에서 아래로
 	{
 		shared_ptr<GameObject> light = make_shared<GameObject>();
 		light->AddComponent(make_shared<Transform>());
 		light->GetTransform()->SetLocalPosition(Vec3(0, 1000, 500));
 		light->AddComponent(make_shared<Light>());
 
-		//light->GetLight()->SetLightDirection(Vec3(0, -1, 1.f));
-		light->GetLight()->SetLightDirection(Vec3(0.3f, -1.f, 0.5f));
+		light->GetLight()->SetLightDirection(Vec3(0.f, -1.f, 0.f));
+		//light->GetLight()->SetLightDirection(Vec3(0.3f, -1.f, 0.5f));
 		light->GetLight()->SetLightType(LIGHT_TYPE::DIRECTIONAL_LIGHT);
 
-		//light->GetLight()->SetDiffuse(Vec3(1.f, 1.f, 1.f));
-		//light->GetLight()->SetAmbient(Vec3(0.1f, 0.1f, 0.1f));
-		//light->GetLight()->SetSpecular(Vec3(0.1f, 0.1f, 0.1f));
-		light->GetLight()->SetDiffuse(Vec3(3.f, 3.f, 3.f));
-		light->GetLight()->SetAmbient(Vec3(0.2f, 0.2f, 0.2f));
-		light->GetLight()->SetSpecular(Vec3(1.f, 1.f, 1.f));
+		light->GetLight()->SetDiffuse(Vec3(1.f, 1.f, 1.f));
+		light->GetLight()->SetAmbient(Vec3(0.1f, 0.1f, 0.1f));
+		light->GetLight()->SetSpecular(Vec3(0.1f, 0.1f, 0.1f));
+		//light->GetLight()->SetDiffuse(Vec3(3.f, 3.f, 3.f));
+		//light->GetLight()->SetAmbient(Vec3(0.2f, 0.2f, 0.2f));
+		//light->GetLight()->SetSpecular(Vec3(1.f, 1.f, 1.f));
 
 		scene->AddGameObject(light);
 	}
 
+	// 아래에서 위로
 	{
-		shared_ptr<GameObject> fillLight = make_shared<GameObject>();
-		fillLight->AddComponent(make_shared<Transform>());
-		fillLight->AddComponent(make_shared<Light>());
-
-		fillLight->GetLight()->SetLightType(LIGHT_TYPE::DIRECTIONAL_LIGHT);
-
-		// 주광 반대쪽
-		fillLight->GetLight()->SetLightDirection(Vec3(0.f, 0.5f, -1.f));
-
-		fillLight->GetLight()->SetDiffuse(Vec3(0.3f, 0.3f, 0.3f));
-		fillLight->GetLight()->SetAmbient(Vec3(0.f, 0.f, 0.f));
-		fillLight->GetLight()->SetSpecular(Vec3(0.1f, 0.1f, 0.1f));
-
-		scene->AddGameObject(fillLight);
+		// shared_ptr<GameObject> fillLight = make_shared<GameObject>();
+		// fillLight->AddComponent(make_shared<Transform>());
+		// fillLight->AddComponent(make_shared<Light>());
+		// 
+		// fillLight->GetLight()->SetLightType(LIGHT_TYPE::DIRECTIONAL_LIGHT);
+		// 
+		// // 주광 반대쪽
+		// fillLight->GetLight()->SetLightDirection(Vec3(0.f, 0.5f, -1.f));
+		// 
+		// fillLight->GetLight()->SetDiffuse(Vec3(0.3f, 0.3f, 0.3f));
+		// fillLight->GetLight()->SetAmbient(Vec3(0.f, 0.f, 0.f));
+		// fillLight->GetLight()->SetSpecular(Vec3(0.1f, 0.1f, 0.1f));
+		// 
+		// scene->AddGameObject(fillLight);
 	}
 #pragma endregion
 
-
-
 #pragma region FBX
 	{
-		//shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
-		//
-		//vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
-		//
-		//for (auto& gameObject : gameObjects)
-		//{
-		//	gameObject->SetName(L"Dragon");
-		//	gameObject->SetCheckFrustum(false);
-		//	gameObject->GetTransform()->SetLocalPosition(Vec3(0.f, 0.f, 300.f));
-		//	gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1.f, 1.f));
-		//	scene->AddGameObject(gameObject);
-		//	gameObject->AddComponent(make_shared<TestDragon>());
-		//}
+		shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
+		
+		vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
+		
+		for (auto& gameObject : gameObjects)
+		{
+			gameObject->SetName(L"Dragon");
+		
+			gameObject->SetStatic(false);
+			gameObject->SetCheckFrustum(false);
+			gameObject->GetTransform()->SetLocalPosition(Vec3(0.f, -100.f, 500.f));
+			gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1, 1.f));
+			scene->AddGameObject(gameObject);
+			gameObject->AddComponent(make_shared<TestDragon>());
+		}
 	}
 #pragma endregion
 

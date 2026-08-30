@@ -163,6 +163,7 @@ struct PS_OUT
     float4 position : SV_Target0;
     float4 normal : SV_Target1;
     float4 color : SV_Target2;
+    float4 materialInfo : SV_Target3;
 };
 
 PS_OUT PS_Main(DS_OUT input)
@@ -187,7 +188,9 @@ PS_OUT PS_Main(DS_OUT input)
     output.position = float4(input.viewPos.xyz, 0.f);
     output.normal = float4(viewNormal.xyz, 0.f);
     output.color = color;
-
+    
+    // Phong / 일반 Deferred 재질
+    output.materialInfo = float4(0.f, 0.f, 1.f, 0.f);
     return output;
 }
 
