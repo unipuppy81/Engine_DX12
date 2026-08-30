@@ -4,19 +4,19 @@
 
 void GpuTimer::Init()
 {
+	constexpr uint32 QUERY_COUNT_PER_FRAME = 2;
+	const uint32 totalQueryCount = SWAP_CHAIN_BUFFER_COUNT * QUERY_COUNT_PER_FRAME;
+	
 	// QueryHeap 생성
 	D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
-	queryHeapDesc.Count = 2;
+	queryHeapDesc.Count = totalQueryCount;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
 
-	HRESULT hr = DEVICE.Get()->CreateQueryHeap(
-		&queryHeapDesc,
-		IID_PPV_ARGS(&_queryHeap)
-	);
+	HRESULT hr = DEVICE.Get()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&_queryHeap));
 	assert(SUCCEEDED(hr));
 
 	// Timestamp 결과 2개 읽기용 버퍼
-	uint64 bufferSize = sizeof(uint64) * 2;
+	uint64 bufferSize = sizeof(uint64) * totalQueryCount;
 
 	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_READBACK);
 	CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
@@ -31,47 +31,62 @@ void GpuTimer::Init()
 	);
 	assert(SUCCEEDED(hr));
 
-	// GPU timestamp 주파수
+	// GPU timestamp
 	GRAPHICS_CMD_QUEUE->GetCmdQueue()->GetTimestampFrequency(&_timestampFrequency);
 }
 
-void GpuTimer::Begin()
+void GpuTimer::Begin(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	GRAPHICS_CMD_LIST->EndQuery(
+	uint32 queryIndex = frameIndex * 2;
+
+	cmdList->EndQuery(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
-		0
+		queryIndex
 	);
 }
 
-void GpuTimer::End()
+void GpuTimer::End(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	GRAPHICS_CMD_LIST->EndQuery(
+	uint32 queryIndex = frameIndex * 2 + 1;
+
+	cmdList->EndQuery(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
-		1
+		queryIndex
+
 	);
 }
 
-void GpuTimer::Resolve()
+void GpuTimer::Resolve(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	GRAPHICS_CMD_LIST->ResolveQueryData(
+	uint32 queryStartIndex = frameIndex * 2;
+	uint64 destinationOffset = sizeof(uint64) * queryStartIndex;
+
+
+	cmdList->ResolveQueryData(
 		_queryHeap.Get(),
 		D3D12_QUERY_TYPE_TIMESTAMP,
-		0,
+		queryStartIndex,
 		2,
 		_readbackBuffer.Get(),
-		0
+		destinationOffset
 	);
+
+	_hasResult[frameIndex] = true;
 }
 
-void GpuTimer::UpdateResult()
+void GpuTimer::UpdateResult(uint32 frameIndex)
 {
+	if (!_hasResult[frameIndex])
+		return;
+
+	uint64 offset = sizeof(uint64) * frameIndex * 2;
 	uint64* data = nullptr;
 
 	D3D12_RANGE readRange = {};
-	readRange.Begin = 0;
-	readRange.End = sizeof(uint64) * 2;
+	readRange.Begin = offset;
+	readRange.End = offset + sizeof(uint64) * 2;
 
 	HRESULT hr = _readbackBuffer->Map(
 		0,
@@ -82,21 +97,19 @@ void GpuTimer::UpdateResult()
 	if (FAILED(hr))
 		return;
 
-	uint64 start = data[0];
-	uint64 end = data[1];
+	uint8* bytes = reinterpret_cast<uint8*>(data);
+	uint64* timestamps = reinterpret_cast<uint64*>(bytes + offset);
 
-	_readbackBuffer->Unmap(0, nullptr);
+	uint64 start = timestamps[0];
+	uint64 end = timestamps[1];
 
-	WCHAR text[256];
-	// [Log] GPU
-	//swprintf_s(text, L"GPU Timestamp start=%llu end=%llu freq=%llu\n", start, end, _timestampFrequency);
-	//::OutputDebugString(text);
+	D3D12_RANGE writeRange = { 0, 0 };
+	_readbackBuffer->Unmap(0, &writeRange);
+
 
 	if (end > start && _timestampFrequency > 0)
 	{
-		_gpuMs = static_cast<float>(
-			static_cast<double>(end - start) /
-			static_cast<double>(_timestampFrequency) * 1000.0
-			);
+		_gpuMs = static_cast<float>(static_cast<double>(end - start) 
+			/ static_cast<double>(_timestampFrequency) * 1000.0);
 	}
 }

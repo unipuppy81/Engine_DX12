@@ -6,6 +6,7 @@
 #include "RenderGraph.h"
 #include "DEngine.h"
 #include "ThreadCommandContext.h"
+#include "DiagnosticsManager.h"
 
 void RenderGraphExecutor::Init(GraphicsCommandQueue* graphicsQueue)
 {
@@ -65,6 +66,15 @@ void RenderGraphExecutor::RecordPass(RenderGraphPass* pass, uint32 orderIndex, c
 {
 	CommandContext* context = _graphicsQueue->AcquireCommandContext();
 	ID3D12GraphicsCommandList* cmdList = context->GetCommandList();
+
+    // GPU Frame Time 시작
+    // RenderGraph 실행 순서상 첫 번째 CommandList에 Timestamp 기록
+    if (orderIndex == 0)
+    {
+        uint32 frameIndex = _graphicsQueue->GetCurrentFrameIndex();
+
+        GET_SINGLE(DiagnosticsManager)->BeginGpuTimer(frameIndex, cmdList);
+    }
 
     // 이 Worker Thread의 GRAPHICS_CMD_LIST 지정
     ThreadCommandContext::SetGraphicsCommandList(cmdList);

@@ -54,6 +54,11 @@ public:
 		return _currentFrame->uploadAllocator; 
 	}
 
+	uint32 GetCurrentFrameIndex() const
+	{
+		return _currentFrameIndex;
+	}
+
 	template<typename T>
 	void DeferredRelease(ComPtr<T>& resource)
 	{

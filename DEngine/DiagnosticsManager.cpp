@@ -39,24 +39,24 @@ void DiagnosticsManager::Reset()
 	_culledObjectCount = 0;
 }
 
-void DiagnosticsManager::BeginGpuTimer()
+void DiagnosticsManager::BeginGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	_gpuTimer->Begin();
+	_gpuTimer->Begin(frameIndex, cmdList);
 }
 
-void DiagnosticsManager::EndGpuTimer()
+void DiagnosticsManager::EndGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	_gpuTimer->End();
+	_gpuTimer->End(frameIndex, cmdList);
 }
 
-void DiagnosticsManager::ResolveGpuTimer()
+void DiagnosticsManager::ResolveGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
 {
-	_gpuTimer->Resolve();
+	_gpuTimer->Resolve(frameIndex, cmdList);
 }
 
-void DiagnosticsManager::UpdateGpuResult()
+void DiagnosticsManager::UpdateGpuResult(uint32 frameIndex)
 {
-	_gpuTimer->UpdateResult();
+	_gpuTimer->UpdateResult(frameIndex);
 	_gpuFrameMs = _gpuTimer->GetGpuMs();
 }
 

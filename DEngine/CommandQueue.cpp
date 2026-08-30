@@ -204,30 +204,6 @@ void GraphicsCommandQueue::RenderEnd()
 	_swapChain->SwapIndex();
 }
 
-/*
-void GraphicsCommandQueue::RenderEnd()
-{
-	_cmdList->Close();	
-
-	ID3D12CommandList* cmdListArr[] = { _cmdList.Get() };
-
-	// 1. 명령 제출
-	_cmdQueue->ExecuteCommandLists(1, cmdListArr);
-
-	// 2. Present
-	_swapChain->Present();
-	
-	// 3. 제출된 작업 이후에 Fence 삽입
-	const uint64 fenceValue = Signal();
-	_currentFrame->fenceValue = fenceValue;
-
-	// 4. 이번 프레임 삭제 요청을 Fence와 연결
-	_deferredReleaseQueue.Commit(fenceValue);
-
-	_swapChain->SwapIndex();
-}
-*/
-
 void GraphicsCommandQueue::FlushResourceCommandQueue()
 {
 	_resCmdList->Close();

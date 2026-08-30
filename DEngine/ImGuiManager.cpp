@@ -74,12 +74,16 @@ void ImGuiManager::BeginFrame()
 
 void ImGuiManager::Render()
 {
-    ID3D12DescriptorHeap* heaps[] = { _descriptorHeap.Get() };
+    // RenderGraph CommandList의 RTV 상태는 Main CommandList에 이어지지 않음.
+    // 현재 BackBuffer RTV를 Main CommandList에 다시 바인딩.
+    uint32 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
 
-    // ImGui가 사용하는 SRV DescriptorHeap 바인딩
+    GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+
+    // ImGui Descriptor Heap
+    ID3D12DescriptorHeap* heaps[] = { _descriptorHeap.Get() };
     GRAPHICS_CMD_LIST->SetDescriptorHeaps(1, heaps);
 
-    // ImGui DrawData 렌더링
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRAPHICS_CMD_LIST);
 }
 

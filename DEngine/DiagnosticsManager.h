@@ -22,10 +22,10 @@ public:
     void Init();
     void Reset();
 
-    void BeginGpuTimer();
-    void EndGpuTimer();
-    void ResolveGpuTimer();
-    void UpdateGpuResult();
+    void BeginGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+    void EndGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+    void ResolveGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+    void UpdateGpuResult(uint32 frameIndex);
 
     void AddDrawCallData(uint32 triangleCount);
 

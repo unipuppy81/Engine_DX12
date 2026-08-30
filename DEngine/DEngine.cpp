@@ -124,7 +124,7 @@ void DEngine::Update()
 {
 	GET_SINGLE(DiagnosticsManager)->Reset();
 
-	auto frameStart = std::chrono::high_resolution_clock::now();
+	auto frameStart = chrono::high_resolution_clock::now();
 
 	// *** Engine Loop Begin ***
 
@@ -137,8 +137,8 @@ void DEngine::Update()
 
 	// *** Engine Loop End ***
 
-	auto frameEnd = std::chrono::high_resolution_clock::now();
-	float cpuMs = std::chrono::duration<float, std::milli>(frameEnd - frameStart).count();
+	auto frameEnd = chrono::high_resolution_clock::now();
+	float cpuMs = chrono::duration<float, milli>(frameEnd - frameStart).count();
 
 	GET_SINGLE(DiagnosticsManager)->UpdateFrame(cpuMs);
 }
@@ -157,20 +157,23 @@ void DEngine::Render()
 	GET_SINGLE(ImGuiManager)->BeginFrame();
 	GET_SINGLE(ImGuiManager)->Render();
 
-	GET_SINGLE(DiagnosticsManager)->EndGpuTimer();
-	GET_SINGLE(DiagnosticsManager)->ResolveGpuTimer();
+	uint32 frameIndex = _graphicsCmdQueue->GetCurrentFrameIndex();
+	ID3D12GraphicsCommandList* mainCmdList = GRAPHICS_CMD_LIST;
+
+	GET_SINGLE(DiagnosticsManager)->EndGpuTimer(frameIndex, mainCmdList);
+	GET_SINGLE(DiagnosticsManager)->ResolveGpuTimer(frameIndex, mainCmdList);
 
 	RenderEnd();
-
-	GET_SINGLE(DiagnosticsManager)->UpdateGpuResult();
 }
 
 void DEngine::RenderBegin()
 {
 	_graphicsCmdQueue->RenderBegin();
-	
-	GET_SINGLE(DiagnosticsManager)->BeginGpuTimer();
 
+	uint32 frameIndex = _graphicsCmdQueue->GetCurrentFrameIndex();
+
+	// 이전에 이 FrameResource가 기록했던 GPU 결과
+	GET_SINGLE(DiagnosticsManager)->UpdateGpuResult(frameIndex);
 }
 
 void DEngine::RenderEnd()

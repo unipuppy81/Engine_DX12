@@ -3,10 +3,11 @@ class GpuTimer
 {
 public:
 	void Init();
-	void Begin();
-	void End();
-	void Resolve();
-	void UpdateResult();
+
+	void Begin(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+	void End(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+	void Resolve(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList);
+	void UpdateResult(uint32 frameIndex);
 
 	float GetGpuMs() const { return _gpuMs; }
 
@@ -16,4 +17,6 @@ private:
 
 	uint64 _timestampFrequency = 0;
 	float _gpuMs = 0.0f;
+
+	bool _hasResult[SWAP_CHAIN_BUFFER_COUNT] = {};
 };
