@@ -10,6 +10,18 @@ void InstancingManager::Render(vector<shared_ptr<GameObject>>& gameObjects)
 {
 	lock_guard<mutex> lock(_mutex);
 
+	// Instancing OFF
+	if (!_enabled)
+	{
+		for (auto& gameObject : gameObjects)
+		{
+			gameObject->GetMeshRenderer()->Render();
+		}
+
+		return;
+	}
+
+	// Instancing ON
 	map<uint64, vector<shared_ptr<GameObject>>> cache;
 
 	for (shared_ptr<GameObject>& gameObject : gameObjects)

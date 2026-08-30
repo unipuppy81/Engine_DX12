@@ -10,6 +10,7 @@
 #include "Shader.h"
 #include "ParticleSystem.h"
 #include "InstancingManager.h"
+#include "DiagnosticsManager.h"
 
 #include <iostream>
 
@@ -50,27 +51,35 @@ void Camera::SortGameObject()
 	_vecParticle.clear();
 
 	uint32 total = 0;
+	uint32 visible = 0;
 	uint32 frustumCulled = 0;
-	uint32 layerCulled = 0;
 
 	for (auto& gameObject : gameObjects)
 	{
+		// 렌더 대상 아니면 제외
 		if (gameObject->GetMeshRenderer() == nullptr && gameObject->GetParticleSystem() == nullptr)
 			continue;
 
+		// camera layer에 안 보이는 객체 frustum 처리
 		if (IsCulled(gameObject->GetLayerIndex()))
 			continue;
 
-		if (gameObject->GetCheckFrustum())
+
+		// Frustum test 대상 전체
+		total++;
+
+		if (_enableFrustumCulling && gameObject->GetCheckFrustum())
 		{
 			if (_frustum.ContainsSphere(
 				gameObject->GetTransform()->GetWorldPosition(),
 				gameObject->GetTransform()->GetBoundingSphereRadius()) == false)
 			{
+				frustumCulled++;
 				continue;
 			}
 		}
 
+		visible++;
 
 		if (gameObject->GetMeshRenderer())
 		{
@@ -89,7 +98,12 @@ void Camera::SortGameObject()
 		{
 			_vecParticle.push_back(gameObject);
 		}
+
 	}
+	//GET_SINGLE(DiagnosticsManager)->SetObjectCount(total, visible, frustumCulled);
+	_totalCount = total;
+	_visibleCount = visible;
+	_frustumCulledCount = frustumCulled;
 }
 
 void Camera::SortShadowObject()

@@ -15,6 +15,8 @@ public:
     void Record(RenderGraph& renderGraph);
     void Submit();
 
+    void SetWorkerCount(uint32 count);
+    uint32 GetWorkerCount() const { return _workerCount; }
 private:
     void RecordPass(RenderGraphPass* pass, uint32 orderIndex, const vector<D3D12_RESOURCE_BARRIER>& barriers);
 
@@ -23,5 +25,7 @@ private:
     GraphicsCommandQueue* _graphicsQueue = nullptr;
 
     vector<ID3D12CommandList*> _recordedCommandLists;
+
+    uint32 _workerCount = 1;
 };
 

@@ -18,8 +18,8 @@ void DiagnosticsManager::UpdateFrame(float cpuMs)
 		_displayfps = fps;
 		_displayCpuFrameMs = _cpuFrameMs;
 		_displayGpuFrameMs = _gpuFrameMs;
-		_displayDrawCallCount = _drawCallCount;
-		_displayTriangleCount = _triangleCount;
+		_displayDrawCallCount = _drawCallCount.load(memory_order_relaxed);
+		_displayTriangleCount = _triangleCount.load(memory_order_relaxed);
 
 		_displayElapsed = 0.0f;
 	}
@@ -32,11 +32,19 @@ void DiagnosticsManager::Init()
 
 void DiagnosticsManager::Reset()
 {
-	_drawCallCount = 0;
-	_triangleCount = 0;
+	_drawCallCount.store(0, memory_order_relaxed);
+	_triangleCount.store(0, memory_order_relaxed);
+
 	_totalObjectCount = 0;
 	_visibleObjectCount = 0;
 	_culledObjectCount = 0;
+
+	_renderPrepareMs = 0.0f;
+	_renderGraphCompileMs = 0.0f;
+	_commandRecordMs = 0.0f;
+
+	_passCount = 0;
+	_barrierCount = 0;
 }
 
 void DiagnosticsManager::BeginGpuTimer(uint32 frameIndex, ID3D12GraphicsCommandList* cmdList)
@@ -62,6 +70,6 @@ void DiagnosticsManager::UpdateGpuResult(uint32 frameIndex)
 
 void DiagnosticsManager::AddDrawCallData(uint32 triangleCount)
 {
-	_drawCallCount++;
-	_triangleCount += triangleCount;
+	_drawCallCount.fetch_add(1, memory_order_relaxed);
+	_triangleCount.fetch_add(triangleCount, memory_order_relaxed);	
 }

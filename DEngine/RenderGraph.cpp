@@ -2,6 +2,7 @@
 #include "RenderGraph.h"
 #include "Texture.h"
 #include "RenderGraphResource.h"
+#include "DiagnosticsManager.h"
 
 #include <queue>
 
@@ -203,12 +204,27 @@ void RenderGraph::SortPasses()
 
 void RenderGraph::Compile()
 {
-    ValidatePassResources();
+    auto start = chrono::high_resolution_clock::now();
 
+    // compile code
+    ValidatePassResources();
     BuildDependencyGraph();
     SortPasses();
-
     BuildBarriers();
+
+    auto end = chrono::high_resolution_clock::now();
+    float compileMs = chrono::duration<float, milli>(end - start).count();
+
+    GET_SINGLE(DiagnosticsManager) ->SetRenderGraphCompileMs(compileMs);
+
+
+    uint32 barrierCount = 0;
+    for (const auto& barriers : _passBarriers)
+    {
+        barrierCount += static_cast<uint32>(barriers.size());
+    }
+
+    GET_SINGLE(DiagnosticsManager)->SetRenderGraphStats(static_cast<uint32>(_executionOrder.size()), barrierCount);
 }
 
 // ============================================================

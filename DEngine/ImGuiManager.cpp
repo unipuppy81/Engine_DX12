@@ -3,6 +3,8 @@
 #include "DEngine.h"
 #include "TableDescriptorHeap.h"
 #include "Timer.h"
+#include "Camera.h"
+#include "InstancingManager.h"
 #include "DiagnosticsManager.h"
 
 void ImGuiManager::Init(HWND hwnd)
@@ -113,12 +115,63 @@ void ImGuiManager::CreateDescriptorHeap()
 
 void ImGuiManager::ShowPerformance()
 {
-    uint32 fps = GET_SINGLE(Timer)->GetFps();
-
     ImGui::Text("Performance");
     ImGui::Text("FPS :  %.0f", GET_SINGLE(DiagnosticsManager)->GetFps());
     ImGui::Text("CPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetCpuFrameMs());
     ImGui::Text("GPU Frame: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetGpuFrameMs());
+    ImGui::Text("Render Prepare: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetRenderPrepareMs());
+    ImGui::Text("RenderGraph Compile: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetRenderGraphCompileMs());
+    ImGui::Text("Command Record: %.3f ms", GET_SINGLE(DiagnosticsManager)->GetCommandRecordMs());
     ImGui::Text("DrawCall Count: %d", GET_SINGLE(DiagnosticsManager)->GetDrawCallCount());
     ImGui::Text("Triangle Count: %d", GET_SINGLE(DiagnosticsManager)->GetTriangleCount());
+    ImGui::Text(
+        "Objects: Total %u / Visible %u / Culled %u",
+        GET_SINGLE(DiagnosticsManager)->GetTotalObjectCount(),
+        GET_SINGLE(DiagnosticsManager)->GetVisibleObjectCount(),
+        GET_SINGLE(DiagnosticsManager)->GetCulledObjectCount());
+
+    ImGui::Text("RenderGraph Pass: %u", GET_SINGLE(DiagnosticsManager)->GetPassCount());
+    ImGui::Text("RenderGraph Barrier: %u", GET_SINGLE(DiagnosticsManager)->GetBarrierCount());
+
+    ShowRenderThreadCount();
+
+    bool cullingEnabled = Camera::IsFrustumCullingEnabled();
+    if (ImGui::Checkbox("Frustum Culling", &cullingEnabled))
+    {
+        Camera::SetFrustumCullingEnabled(cullingEnabled);
+    }
+
+
+    bool instancingEnabled = GET_SINGLE(InstancingManager)->IsEnabled();
+
+    if (ImGui::Checkbox("Instancing", &instancingEnabled))
+    {
+        GET_SINGLE(InstancingManager)->SetEnabled(instancingEnabled);
+    }
+}
+
+void ImGuiManager::ShowRenderThreadCount()
+{
+    auto executor = GDEngine->GetRenderGraphExecutor();
+    int workerCount = static_cast<int>(executor->GetWorkerCount());
+
+    if (ImGui::RadioButton("Worker 1", workerCount == 1))
+        executor->SetWorkerCount(1);
+
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Worker 2", workerCount == 2))
+        executor->SetWorkerCount(2);
+
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Worker 4", workerCount == 4))
+        executor->SetWorkerCount(4);
+
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Worker 8", workerCount == 8))
+        executor->SetWorkerCount(8);
+
+    ImGui::Text("Worker Count: %u", executor->GetWorkerCount());
 }

@@ -16,6 +16,7 @@ private:
 
 private:
 	void ShowPerformance();
+	void ShowRenderThreadCount();
 
 private:
 	ComPtr<ID3D12DescriptorHeap> _descriptorHeap;

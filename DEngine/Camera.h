@@ -46,9 +46,18 @@ public:
 	void SetWidth(float value) { _width = value; }
 	void SetHeight(float value) { _height = value; }
 
+	static void SetFrustumCullingEnabled(bool enabled) { _enableFrustumCulling = enabled; }
+
+
 	Matrix& GetViewMatrix() { return _matView; }
 	Matrix& GetProjectionMatrix() { return _matProjection; }
 
+	// Diagnostics
+	uint32 GetTotalCount() const { return _totalCount; }
+	uint32 GetVisibleCount() const { return _visibleCount; }
+	uint32 GetFrustumCulledCount() const { return _frustumCulledCount; }
+
+	static bool IsFrustumCullingEnabled() { return _enableFrustumCulling; }
 private:
 	PROJECTION_TYPE _type = PROJECTION_TYPE::PERSPECTIVE;
 
@@ -71,9 +80,17 @@ private:
 	vector<shared_ptr<GameObject>>	_vecParticle;
 	vector<shared_ptr<GameObject>>	_vecShadow;
 
+	uint32 _totalCount = 0;
+	uint32 _visibleCount = 0;
+	uint32 _frustumCulledCount = 0;
+
+	inline static bool _enableFrustumCulling = true;
+
 public:
 	// TEMP
 	static thread_local Matrix S_MatView;
 	static thread_local Matrix S_MatProjection;
+
+
 };
 

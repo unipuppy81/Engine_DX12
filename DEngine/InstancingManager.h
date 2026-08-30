@@ -13,10 +13,13 @@ public:
 	void ClearBuffer();
 	void Clear();
 
+	void SetEnabled(bool enabled) { _enabled = enabled; }
+	bool IsEnabled() const { return _enabled; }
 private:
 	void AddParam(uint64 instanceId, InstancingParams& data);
 
 private:
+	bool _enabled = true;
 	mutex _mutex;
 
 	map<uint64/*instanceId*/, shared_ptr<InstancingBuffer>> _buffers;

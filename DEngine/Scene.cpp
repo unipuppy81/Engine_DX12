@@ -7,6 +7,7 @@
 #include "Light.h"
 #include "Resources.h"
 #include "RenderGraph.h"
+#include "DiagnosticsManager.h"
 
 void Scene::Awake()
 {
@@ -188,8 +189,29 @@ void Scene::RenderAll()
 		});
 	*/
 
-	//graph.Execute();
-	//return;
+	// Render list 준비
+	auto prepareStart = chrono::high_resolution_clock::now();
+
+	for (auto& camera : _cameras)
+	{
+		camera->SortGameObject();
+	}
+	
+	if (!_cameras.empty())
+	{
+		auto mainCamera = _cameras[0];
+
+		GET_SINGLE(DiagnosticsManager)->SetObjectCount(
+			mainCamera->GetTotalCount(),
+			mainCamera->GetVisibleCount(),
+			mainCamera->GetFrustumCulledCount());
+	}
+
+	auto prepareEnd = chrono::high_resolution_clock::now();
+	float prepareMs = chrono::duration<float, milli>(prepareEnd - prepareStart).count();
+
+	GET_SINGLE(DiagnosticsManager)->SetRenderPrepareMs(prepareMs);
+
 
 	// 1. 의존성 / 순서 / Barrier Compile
 	graph.Compile();
@@ -216,8 +238,6 @@ void Scene::RenderShadow()
 
 		light->RenderShadow();
 	}
-
-	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
 }
 
 void Scene::RenderDeferred()
@@ -228,11 +248,7 @@ void Scene::RenderDeferred()
 	gBufferGroup->ClearRenderTargetView();
 	
 	shared_ptr<Camera> mainCamera = _cameras[0];
-	mainCamera->SortGameObject();
 	mainCamera->Render_Deferred();
-	//gBufferGroup->WaitTargetToResource();
-
-	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->WaitTargetToResource();
 }
 
 void Scene::RenderLights()
@@ -255,7 +271,6 @@ void Scene::RenderLights()
 		light->RenderPBR();
 	}
 
-	//GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::LIGHTING)->WaitTargetToResource();
 }
 
 void Scene::RenderFinal()

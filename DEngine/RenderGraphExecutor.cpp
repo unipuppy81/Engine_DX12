@@ -23,7 +23,8 @@ void RenderGraphExecutor::Init(GraphicsCommandQueue* graphicsQueue)
     if (threadCount == 0)
         threadCount = 1;
 
-    _threadPool.Init(threadCount);
+    _workerCount = threadCount;
+    _threadPool.Init(_workerCount);
 }
 
 void RenderGraphExecutor::Shutdown()
@@ -33,7 +34,9 @@ void RenderGraphExecutor::Shutdown()
 
 void RenderGraphExecutor::Record(RenderGraph& renderGraph)
 {
-	auto& executionOrder = renderGraph.GetExecutionOrder();
+    auto start = chrono::high_resolution_clock::now();
+
+    const auto& executionOrder = renderGraph.GetExecutionOrder();
 
 	_recordedCommandLists.clear();
 	_recordedCommandLists.resize(executionOrder.size());
@@ -43,9 +46,7 @@ void RenderGraphExecutor::Record(RenderGraph& renderGraph)
         uint32 passIndex = executionOrder[orderIndex];
 
         RenderGraphPass* pass = renderGraph.GetPass(passIndex);
-
         auto& barriers = renderGraph.GetPassBarriers(passIndex);
-
         _threadPool.Enqueue(
             [this, pass, orderIndex, &barriers]()
             {
@@ -55,11 +56,27 @@ void RenderGraphExecutor::Record(RenderGraph& renderGraph)
 
 	// 모든 CommandList 기록 완료까지 대기
 	_threadPool.WaitIdle();
+
+
+    auto end = chrono::high_resolution_clock::now();
+    float recordMs = chrono::duration<float, milli>(end - start).count();
+    GET_SINGLE(DiagnosticsManager)->SetCommandRecordMs(recordMs);
 }
 
 void RenderGraphExecutor::Submit()
 {
     _graphicsQueue->ExecuteCommandLists(_recordedCommandLists);
+}
+
+void RenderGraphExecutor::SetWorkerCount(uint32 count)
+{
+    if (count == _workerCount)
+        return;
+
+    _threadPool.Shutdown();
+
+    _workerCount = count;
+    _threadPool.Init(_workerCount);
 }
 
 void RenderGraphExecutor::RecordPass(RenderGraphPass* pass, uint32 orderIndex, const vector<D3D12_RESOURCE_BARRIER>& barriers)
