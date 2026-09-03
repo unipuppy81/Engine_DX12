@@ -57,20 +57,20 @@ void ImGuiManager::Init(HWND hwnd)
 
 void ImGuiManager::BeginFrame()
 {
-    // 새 ImGui 프레임 시작
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::SetNextWindowSize(ImVec2(430, 520), ImGuiCond_FirstUseEver);
+    // ShowGBufferLabels();
 
-    ImGui::Begin("Renderer Debug");
-    
-    ShowPerformance();
+    if (_showDebugWindow)
+    {
+        ImGui::SetNextWindowSize(ImVec2(430, 520), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Renderer Debug");
+        ShowPerformance();
+        ImGui::End();
+    }
 
-    ImGui::End();
-
-    // ImGui 내부 DrawData 생성
     ImGui::Render();
 }
 
@@ -174,4 +174,30 @@ void ImGuiManager::ShowRenderThreadCount()
         executor->SetWorkerCount(8);
 
     ImGui::Text("Worker Count: %u", executor->GetWorkerCount());
+}
+
+void ImGuiManager::ShowGBufferLabels()
+{
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+
+    const char* names[4] =
+    {
+        "Position",
+        "Normal",
+        "Albedo",
+        "MaterialInfo"
+    };
+
+    const float x[4] =
+    {
+        165.f,
+        565.f,
+        965.f,
+        1345.f
+    };
+
+    for (int i = 0; i < 4; ++i)
+    {
+        drawList->AddText(ImVec2(x[i], 205.f), IM_COL32(255, 255, 255, 255), names[i]);
+    }
 }

@@ -81,10 +81,10 @@ PS_OUT PS_DirLight(VS_OUT input)
             //    color.diffuse *= 0.5f;
             //    color.specular = (float4) 0.f;
             //}
-            if (shadowDepth > 0 && depth > shadowDepth + 0.00001f)
+            if (shadowDepth > 0 && depth > shadowDepth + 0.0005f)
             {
-                color.diffuse = float4(0.f, 0.f, 0.f, 1.f);
-                color.specular = float4(0.f, 0.f, 0.f, 1.f);
+                color.diffuse *= 0.4f;
+                color.specular *= 0.2f;
             }
         }
     }

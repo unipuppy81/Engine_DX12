@@ -217,6 +217,7 @@
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="RenderGraphExecutor.cpp" />
     <ClCompile Include="ThreadCommandContext.cpp" />
+    <ClCompile Include="TestDirectionalLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -403,6 +404,7 @@
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="RenderGraphExecutor.h" />
     <ClInclude Include="ThreadCommandContext.h" />
+    <ClInclude Include="TestDirectionalLight.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleMath.inl">

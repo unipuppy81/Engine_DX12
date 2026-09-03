@@ -212,6 +212,7 @@
     <ClInclude Include="TableDescriptorHeap.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TestCameraScript.h" />
+    <ClInclude Include="TestDirectionalLight.h" />
     <ClInclude Include="TestDragon.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="ThreadCommandContext.h" />
@@ -295,6 +296,7 @@
     <ClCompile Include="TableDescriptorHeap.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TestCameraScript.cpp" />
+    <ClCompile Include="TestDirectionalLight.cpp" />
     <ClCompile Include="TestDragon.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="ThreadCommandContext.cpp" />
