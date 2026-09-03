@@ -166,12 +166,12 @@ RenderGraph Pass를 Worker Thread에 분배하고 각 Pass를 독립적인 Comma
 <summary>Worker 1 / 2 / 4 / 8 screenshots</summary>
 <table>
 <tr>
-<td width="50%">**Worker 1**<img src="assets/readme/worker1.png"></td>
-<td width="50%">**Worker 2**<img src="assets/readme/worker2.png"></td>
+<td width="50%">Worker 1<img src="assets/readme/worker1.png"></td>
+<td width="50%">Worker 2<img src="assets/readme/worker2.png"></td>
 </tr>
 <tr>
-<td width="50%">**Worker 4**<img src="assets/readme/worker4.png"></td>
-<td width="50%">**Worker 8**<img src="assets/readme/worker8.png"></td>
+<td width="50%">Worker 4<img src="assets/readme/worker4.png"></td>
+<td width="50%">Worker 8<img src="assets/readme/worker8.png"></td>
 </tr>
 </table>
 </details>
