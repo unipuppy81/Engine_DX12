@@ -256,8 +256,6 @@ ImGui 기반 Diagnostics UI에서 다음 항목을 런타임에 확인할 수 �
 **Showcase 핵심:**  
 Skinned Animation 결과를 Shadow Pass에도 동일하게 반영하여 Terrain 위 Dynamic Shadow가 애니메이션과 함께 갱신됩니다.
 
-> `terrain.mp4`를 저장소의 `assets/showcase/terrain.mp4` 등에 추가한 뒤 링크하면 됩니다.
-
 ---
 
 # Tech Stack
@@ -269,5 +267,3 @@ Skinned Animation 결과를 Shadow Pass에도 동일하게 반영하여 Terrain 
 - Visual Studio
 
 ---
-
-상세 설계 의도, 구현 과정, 문제 해결 과정은 별도의 포트폴리오 문서에서 정리합니다.
