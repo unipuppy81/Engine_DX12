@@ -1,7 +1,7 @@
 # DirectX 12 Renderer / Engine
 
-DirectX 12 기반으로 직접 구현한 Renderer / Engine 프로젝트입니다.  
-렌더링 기능 구현뿐 아니라 **RenderGraph, Multi-threaded Command Recording, FrameResource, UploadAllocator, Descriptor / GPU Resource Lifetime 관리**까지 엔진 내부 구조를 직접 구성했습니다.
+DirectX 12 기반의 Renderer / Engine 프로젝트입니다.  
+렌더링 기능 구현과 **RenderGraph, Multi-threaded Command Recording, FrameResource, UploadAllocator, Descriptor / GPU Resource Lifetime 관리**까지 엔진 내부 구조를 직접 구성했습니다.
 
 ---
 
