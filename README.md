@@ -105,18 +105,27 @@ Tangent-space Normal Map을 TBN 행렬로 변환해 Geometry를 추가하지 않
 
 ## Instancing
 
-동일 Mesh / Material 객체를 Instance 단위로 묶어 Draw Call과 CPU Recording 비용을 줄였습니다.
+동일 Mesh / Material 객체를 Instance Batch로 묶어
+Draw Call과 CPU Command Recording 비용을 줄였습니다.
 
 | Metric | OFF | ON |
 |---|---:|---:|
-| FPS | 3 | 90 |
-| CPU Frame | 300.371 ms | 12.054 ms |
-| GPU Frame | 3.344 ms | 0.328 ms |
-| Command Record | 332.080 ms | 10.102 ms |
-| Draw Calls | 410 | 11 |
-| Triangles | 309,230 | 309,230 |
+| CPU Frame | 58.113 ms | **42.557 ms** |
+| Command Record | 41.745 ms | **29.784 ms** |
+| Draw Calls | 2,236 | **1,432** |
+| Triangles | 1,728,147 | 1,728,147 |
 
-동일 Triangle 수를 유지하면서 Draw Calls 410 -> 11로 감소했습니다.
+Instancing 적용 후 Draw Calls는  
+**2,236 → 1,432 (약 36.0% 감소)**,
+
+Command Recording Time은  
+**41.745 ms → 29.784 ms (약 28.7% 감소)** 했다.
+
+동일한 1,728,147 Triangle을 유지하면서
+Draw Submission 수와 CPU Recording 비용이 감소하는 것을 확인했다.
+
+※ 표의 성능 수치는 반복 측정 평균값이며,
+스크린샷은 기능 동작 확인용 예시 프레임이다.
 
 <table>
 <tr>

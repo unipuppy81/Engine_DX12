@@ -524,7 +524,7 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 		light->GetTransform()->SetLocalPosition(Vec3(0, 1000, 500));
 		light->AddComponent(make_shared<Light>());
 
-		light->AddComponent(make_shared<TestDirectionalLight>());
+		// light->AddComponent(make_shared<TestDirectionalLight>());
 		
 		light->GetLight()->SetLightDirection(Vec3(0.4f, -1.f, 0.3f));
 		//light->GetLight()->SetLightDirection(Vec3(0.3f, -1.f, 0.5f));
