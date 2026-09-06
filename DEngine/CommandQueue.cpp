@@ -113,7 +113,7 @@ void GraphicsCommandQueue::BeginInitCommands()
 	GDEngine->GetGraphicsDescHeap()->Clear(0);
 	GDEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::IBL_CUBEMAP)->Clear(0);
 
-	DX_LOG(L"CMDLISTTEST INIT CMD = " << _cmdList.Get());
+	//DX_LOG(L"CMDLISTTEST INIT CMD = " << _cmdList.Get());
 	ThreadCommandContext::SetGraphicsCommandList(_cmdList.Get());
 	_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
 

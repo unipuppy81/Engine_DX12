@@ -273,35 +273,35 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 		// BenchmarkObjects
 		{
-			// shared_ptr<Mesh> mesh = GET_SINGLE(Resources)->LoadSphereMesh();
-			// shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
-			// 
-			// const int countX = 20;
-			// const int countY = 20;
-			// const float spacing = 15.f;
-			// for (int y = 0; y < countY; ++y)
-			// {
-			// 	for (int x = 0; x < countX; ++x)
-			// 	{
-			// 		shared_ptr<GameObject> obj = make_shared<GameObject>();
-			// 
-			// 		obj->AddComponent(make_shared<Transform>());
-			// 		obj->GetTransform()->SetLocalScale(Vec3(5.f, 5.f, 5.f));
-			// 		obj->GetTransform()->SetLocalPosition(Vec3(100.f + (x - 10) * spacing, (y - 10) * spacing, 300.f));
-			// 
-			// 		obj->SetStatic(false);
-			// 		obj->SetCheckFrustum(true);
-			// 
-			// 		shared_ptr<MeshRenderer> renderer = make_shared<MeshRenderer>();
-			// 
-			// 		renderer->SetMesh(mesh);
-			// 		renderer->SetMaterial(material);
-			// 
-			// 		obj->AddComponent(renderer);
-			// 
-			// 		scene->AddGameObject(obj);
-			// 	}
-			// }
+			shared_ptr<Mesh> mesh = GET_SINGLE(Resources)->LoadSphereMesh();
+			shared_ptr<Material> material = GET_SINGLE(Resources)->Get<Material>(L"GameObject");
+			
+			const int countX = 40;
+			const int countY = 40;
+			const float spacing = 15.f;
+			for (int y = 0; y < countY; ++y)
+			{
+				for (int x = 0; x < countX; ++x)
+				{
+					shared_ptr<GameObject> obj = make_shared<GameObject>();
+			
+					obj->AddComponent(make_shared<Transform>());
+					obj->GetTransform()->SetLocalScale(Vec3(5.f, 5.f, 5.f));
+					obj->GetTransform()->SetLocalPosition(Vec3(100.f + (x - 10) * spacing, (y - 10) * spacing, 300.f));
+			
+					obj->SetStatic(false);
+					obj->SetCheckFrustum(true);
+			
+					shared_ptr<MeshRenderer> renderer = make_shared<MeshRenderer>();
+			
+					renderer->SetMesh(mesh);
+					renderer->SetMaterial(material);
+			
+					obj->AddComponent(renderer);
+			
+					scene->AddGameObject(obj);
+				}
+			}
 		}
 
 		// Showcase
@@ -561,21 +561,21 @@ shared_ptr<Scene> SceneManager::LoadTestScene()
 
 #pragma region FBX
 	{
-		shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
-		
-		vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
-		
-		for (auto& gameObject : gameObjects)
-		{
-			gameObject->SetName(L"Dragon");
-		
-			gameObject->SetStatic(false);
-			gameObject->SetCheckFrustum(false);
-			gameObject->GetTransform()->SetLocalPosition(Vec3(300.f, -100.f, 500.f));
-			gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1, 1.f));
-			scene->AddGameObject(gameObject);
-			gameObject->AddComponent(make_shared<TestDragon>());
-		}
+		// shared_ptr<MeshData> meshData = GET_SINGLE(Resources)->LoadFBX(L"..\\Resources\\FBX\\Dragon.fbx");
+		// 
+		// vector<shared_ptr<GameObject>> gameObjects = meshData->Instantiate();
+		// 
+		// for (auto& gameObject : gameObjects)
+		// {
+		// 	gameObject->SetName(L"Dragon");
+		// 
+		// 	gameObject->SetStatic(false);
+		// 	gameObject->SetCheckFrustum(false);
+		// 	gameObject->GetTransform()->SetLocalPosition(Vec3(300.f, -100.f, 500.f));
+		// 	gameObject->GetTransform()->SetLocalScale(Vec3(1.f, 1, 1.f));
+		// 	scene->AddGameObject(gameObject);
+		// 	gameObject->AddComponent(make_shared<TestDragon>());
+		// }
 	}
 #pragma endregion
 

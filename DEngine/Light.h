@@ -70,5 +70,11 @@ private:
 	shared_ptr<class Material> _pbrLightMaterial;	// PBR Light
 
 	shared_ptr<GameObject> _shadowCamera;
+
+public:
+	float _shadowSortMs = 0.f;
+	float _shadowRenderMs = 0.f;
+	float GetShadowSortMs() const { return _shadowSortMs; }
+	float GetShadowRenderMs() const { return _shadowRenderMs; }
 };
 

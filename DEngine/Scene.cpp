@@ -227,12 +227,65 @@ void Scene::RenderAll()
 
 	// 2. 각 pass 를 worker 에게 보내 commandlist 기록
 	GDEngine->GetRenderGraphExecutor()->Record(graph);
+
+	DX_LOG(
+		L"Forward Sort=" << _otherSortMs
+		<< L" OtherRender=" << _otherRenderMs
+		<< L" ms");
+
+	DX_LOG(
+		L"Shadow OM=" << _shadowOMMs
+		<< L" Clear=" << _shadowClearMs
+		<< L" Light=" << _shadowLightMs);
+
+	for (auto& light : _lights)
+	{
+		if (light->GetLightType() != LIGHT_TYPE::DIRECTIONAL_LIGHT)
+			continue;
+
+		DX_LOG(
+			L"Shadow Sort=" << light->GetShadowSortMs()
+			<< L" Render=" << light->GetShadowRenderMs());
+
+		break;
+	}
+
 	GDEngine->GetRenderGraphExecutor()->Submit();
 
 	// 제출된 RenderGraph의 최종 Resource State 반영
 	graph.CommitResourceStates();
 }
 
+void Scene::RenderShadow()
+{
+	auto t0 = chrono::steady_clock::now();
+
+	auto shadowGroup =
+		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
+
+	shadowGroup->OMSetRenderTargets();
+
+	auto t1 = chrono::steady_clock::now();
+
+	shadowGroup->ClearRenderTargetView();
+
+	auto t2 = chrono::steady_clock::now();
+
+	for (auto& light : _lights)
+	{
+		if (light->GetLightType() != LIGHT_TYPE::DIRECTIONAL_LIGHT)
+			continue;
+
+		light->RenderShadow();
+	}
+
+	auto t3 = chrono::steady_clock::now();
+
+	_shadowOMMs = chrono::duration<float, milli>(t1 - t0).count();
+	_shadowClearMs = chrono::duration<float, milli>(t2 - t1).count();
+	_shadowLightMs = chrono::duration<float, milli>(t3 - t2).count();
+}
+/*
 void Scene::RenderShadow()
 {
 	auto shadowGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW);
@@ -248,7 +301,7 @@ void Scene::RenderShadow()
 		light->RenderShadow();
 	}
 }
-
+*/
 void Scene::RenderDeferred()
 {
 	auto gBufferGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER);
@@ -309,6 +362,61 @@ void Scene::RenderFinal()
 
 void Scene::RenderForward()
 {
+	_otherSortMs = 0.f;
+	_otherRenderMs = 0.f;
+
+	auto t0 = chrono::steady_clock::now();
+
+	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
+	auto swapChainGroup =
+		GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
+
+	swapChainGroup->OMSetRenderTargets(1, backIndex);
+
+	auto t1 = chrono::steady_clock::now();
+
+	shared_ptr<Camera> mainCamera = _cameras[0];
+	mainCamera->Render_Forward();
+
+	auto t2 = chrono::steady_clock::now();
+
+	for (auto& camera : _cameras)
+	{
+		if (camera == mainCamera)
+			continue;
+
+		auto sortStart = chrono::steady_clock::now();
+
+		camera->SortGameObject();
+
+		auto sortEnd = chrono::steady_clock::now();
+
+		camera->Render_Forward();
+
+		auto renderEnd = chrono::steady_clock::now();
+
+		_otherSortMs +=
+			chrono::duration<float, milli>(sortEnd - sortStart).count();
+
+		_otherRenderMs +=
+			chrono::duration<float, milli>(renderEnd - sortEnd).count();
+	}
+
+	auto t3 = chrono::steady_clock::now();
+
+	_forwardOMMs =
+		chrono::duration<float, milli>(t1 - t0).count();
+
+	_forwardMainMs =
+		chrono::duration<float, milli>(t2 - t1).count();
+
+	_forwardOtherMs =
+		chrono::duration<float, milli>(t3 - t2).count();
+}
+
+/*
+void Scene::RenderForward()
+{
 	int8 backIndex = GDEngine->GetSwapChain()->GetBackBufferIndex();
 	auto swapChainGroup = GDEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN);
 	swapChainGroup->OMSetRenderTargets(1, backIndex);
@@ -327,6 +435,7 @@ void Scene::RenderForward()
 		camera->Render_Forward();
 	}
 }
+*/
 
 void Scene::PushLightData()
 {

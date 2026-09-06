@@ -95,8 +95,18 @@ void Light::RenderPBR()
 
 void Light::RenderShadow()
 {
+	auto t0 = chrono::steady_clock::now();
+
 	_shadowCamera->GetCamera()->SortShadowObject();
+
+	auto t1 = chrono::steady_clock::now();
+
 	_shadowCamera->GetCamera()->Render_Shadow();
+
+	auto t2 = chrono::steady_clock::now();
+
+	_shadowSortMs = chrono::duration<float, milli>(t1 - t0).count();
+	_shadowRenderMs = chrono::duration<float, milli>(t2 - t1).count();
 }
 
 void Light::SetLightDirection(Vec3 direction)

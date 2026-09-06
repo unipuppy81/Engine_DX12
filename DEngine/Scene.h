@@ -46,5 +46,18 @@ private:
 	vector<shared_ptr<GameObject>> _gameObjects;
 	vector<shared_ptr<class Camera>>	_cameras;
 	vector<shared_ptr<class Light>>		_lights;
+
+
+public:
+	float _forwardOMMs = 0.f;
+	float _forwardMainMs = 0.f;
+	float _forwardOtherMs = 0.f;
+
+	float _otherSortMs = 0.f;
+	float _otherRenderMs = 0.f;
+
+	float _shadowOMMs = 0.f;
+	float _shadowClearMs = 0.f;
+	float _shadowLightMs = 0.f;
 };
 

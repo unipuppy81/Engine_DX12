@@ -64,9 +64,9 @@ void ConstantBuffer::PushGraphicsData(void* buffer, uint32 size)
 
 	}
 
-	DX_LOG(L"CB reg=" << static_cast<int>(_reg)
-		<< L" index=" << index
-		<< L" count=" << _elementCount);
+	// DX_LOG(L"CB reg=" << static_cast<int>(_reg)
+	// 	<< L" index=" << index
+	// 	<< L" count=" << _elementCount);
 	assert(index < _elementCount);
 
 	UploadAllocator& allocator = GRAPHICS_CMD_QUEUE->GetCurrentUploadAllocator();
@@ -137,9 +137,9 @@ void ConstantBuffer::PushComputeData(void* buffer, uint32 size)
 
 D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer::GetCpuHandle(uint32 index)
 {
-	DX_LOG(L"[GetCpuHandle] reg=" << static_cast<int>(_reg)
-		<< L" index=" << index
-		<< L" count=" << _elementCount);
+	//DX_LOG(L"[GetCpuHandle] reg=" << static_cast<int>(_reg)
+	//	<< L" index=" << index
+	//	<< L" count=" << _elementCount);
 
 	assert(index < _elementCount);
 

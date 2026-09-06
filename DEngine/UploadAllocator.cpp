@@ -57,7 +57,20 @@ uint64 UploadAllocator::AlignUp(uint64 value, uint64 alignment)
 
 UploadAllocation UploadAllocator::Allocate(uint64 size, uint64 alignment)
 {
+    auto waitStart = chrono::steady_clock::now();
+
     lock_guard<mutex> lock(_mutex);
+    auto waitEnd = chrono::steady_clock::now();
+
+    uint64 waitNs =chrono::duration_cast<chrono::nanoseconds>(waitEnd - waitStart).count();
+
+    _lockWaitNs.fetch_add(
+        chrono::duration_cast<chrono::nanoseconds>(
+            waitEnd - waitStart).count(),
+        memory_order_relaxed);
+
+    _allocationCount.fetch_add(1, memory_order_relaxed);
+
 
     uint64 alignedOffset = AlignUp(_offset, alignment);
     uint64 endOffset = alignedOffset + size;

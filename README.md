@@ -151,16 +151,24 @@ View Frustum 외부 객체를 제외하여 처리 Object / Triangle 수를 감�
 
 ## Multi-threaded Command Recording
 
-RenderGraph Pass를 Worker Thread에 분배하고 각 Pass를 독립적인 CommandContext에서 기록합니다.
+RenderGraph Pass를 Worker Thread에 분배하고,
+각 Pass를 독립적인 CommandContext에서 병렬 Recording합니다.
 
 | Worker Count | Command Record |
 |---:|---:|
-| 1 | 348.191 ms |
-| 2 | 317.171 ms |
-| 4 | **207.397 ms** |
-| 8 | 280.187 ms |
+| 1 | 52.19 ms |
+| 2 | 42.91 ms |
+| 4 | **36.88 ms** |
+| 8 | 37.72 ms |
 
-Worker 4에서 가장 낮은 Recording Time을 기록했고, Worker 8에서는 Thread / Synchronization Overhead로 성능이 다시 감소했습니다.
+Worker 수를 1 → 4로 증가시키면서 Command Recording Time이 감소했습니다.
+
+반면 4 → 8 구간에서는 추가적인 성능 향상이 거의 나타나지 않았습니다.
+
+현재 RenderGraph는 5개의 Pass를 Pass 단위 Job으로 처리하기 때문에,
+Worker 수가 Pass 수를 초과하면 추가적인 병렬성을 확보하기 어렵습니다.
+
+따라서 현재 구조에서는 **4 Worker 이후 Command Recording 병렬화 효과가 포화되는 경향**을 확인했습니다.
 
 <details>
 <summary>Worker 1 / 2 / 4 / 8 screenshots</summary>

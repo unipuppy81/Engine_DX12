@@ -59,6 +59,8 @@ public:
 		return _currentFrameIndex;
 	}
 
+
+
 	template<typename T>
 	void DeferredRelease(ComPtr<T>& resource)
 	{

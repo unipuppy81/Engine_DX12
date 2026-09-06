@@ -63,7 +63,7 @@ void GraphicsDescriptorHeap::CommitTable()
 	assert(_threadGroupIndex != INVALID_GROUP_INDEX);
 
 	ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
-	DX_LOG(L"CMDLISTTEST DESC CMD = " << GRAPHICS_CMD_LIST);
+	//DX_LOG(L"CMDLISTTEST DESC CMD = " << GRAPHICS_CMD_LIST);
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = _descHeap->GetGPUDescriptorHandleForHeapStart();
 
 	handle.ptr += static_cast<UINT64>(_threadGroupIndex) * _groupSize;

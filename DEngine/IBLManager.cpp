@@ -24,7 +24,7 @@ void IBLManager::CreateEnvironmentCube()
 
     ID3D12GraphicsCommandList* cmdList = GRAPHICS_CMD_LIST;
 
-    DX_LOG(L"CMDLISTTEST IBL CMD = " << cmdList);
+    //DX_LOG(L"CMDLISTTEST IBL CMD = " << cmdList);
 
     D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         _environmentMap->GetTex2D().Get(),

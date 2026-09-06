@@ -27,5 +27,16 @@ private:
     vector<ID3D12CommandList*> _recordedCommandLists;
 
     uint32 _workerCount = 1;
+
+    vector<float> _passRecordMs;
+    vector<size_t> _passThreadIds;
+    vector<float> _jobWaitMs;
+
+
+    vector<float> _acquireMs;
+    vector<float> _setupMs;
+    vector<float> _barrierMs;
+    vector<float> _executeMs;
+    vector<float> _closeMs;
 };
 

@@ -36,5 +36,19 @@ private:
 
     D3D12_GPU_VIRTUAL_ADDRESS _gpuBaseAddress = 0;
 
+    atomic<uint64_t> _lockWaitNs{ 0 };
+    atomic<uint64_t> _allocationCount{ 0 };
+
+
+public:
+    uint64_t ConsumeLockWaitNs()
+    {
+        return _lockWaitNs.exchange(0);
+    }
+
+    uint64_t ConsumeAllocationCount()
+    {
+        return _allocationCount.exchange(0);
+    }
 };
 
