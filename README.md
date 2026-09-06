@@ -19,7 +19,7 @@ DirectX 12 기반의 Renderer / Engine 프로젝트입니다.
 
 ### Engine / Optimization
 - Scene / GameObject / Component
-- RenderGraph (Topological Sort, Resource State / Berrier Management)
+- RenderGraph (Topological Sort, Resource State / Barrier Management)
 - Multi-threaded Command Recording
 - FrameResource / UploadAllocator
 - DescriptorAllocator / Deferred Release
@@ -108,24 +108,9 @@ Tangent-space Normal Map을 TBN 행렬로 변환해 Geometry를 추가하지 않
 동일 Mesh / Material 객체를 Instance Batch로 묶어
 Draw Call과 CPU Command Recording 비용을 줄였습니다.
 
-| Metric | OFF | ON |
-|---|---:|---:|
-| CPU Frame | 58.113 ms | **42.557 ms** |
-| Command Record | 41.745 ms | **29.784 ms** |
-| Draw Calls | 2,236 | **1,432** |
-| Triangles | 1,728,147 | 1,728,147 |
-
-Instancing 적용 후 Draw Calls는  
-**2,236 → 1,432 (약 36.0% 감소)**,
-
-Command Recording Time은  
-**41.745 ms → 29.784 ms (약 28.7% 감소)** 했다.
-
-동일한 1,728,147 Triangle을 유지하면서
-Draw Submission 수와 CPU Recording 비용이 감소하는 것을 확인했다.
-
-※ 표의 성능 수치는 반복 측정 평균값이며,
-스크린샷은 기능 동작 확인용 예시 프레임이다.
+- Draw Calls: **2,236 → 1,432**
+- Command Record: **41.745 ms → 29.784 ms**
+- 동일 Triangle 수 유지: **1,728,147**
 
 <table>
 <tr>
@@ -134,20 +119,15 @@ Draw Submission 수와 CPU Recording 비용이 감소하는 것을 확인했다.
 </tr>
 </table>
 
+
 ---
 
 ## Frustum Culling
 
-View Frustum 외부 객체를 제외하여 처리 Object / Triangle 수를 감소시켰습니다.
+Camera View Frustum 외부 객체를 Rendering 대상에서 제외합니다.
 
-| Metric | OFF | ON |
-|---|---:|---:|
-| Visible Objects | 401 | 269 |
-| Culled Objects | 0 | 132 |
-| Triangles | 309,230 | 207,194 |
-| Draw Calls | 11 | 11 |
-
-132개 Object를 제외하고 Triangle 수를 309,230 -> 207,194로 감소시켰습니다.
+- Culled Objects: **132**
+- Triangles: **309,230 → 207,194**
 
 <table>
 <tr>
@@ -163,24 +143,14 @@ View Frustum 외부 객체를 제외하여 처리 Object / Triangle 수를 감�
 RenderGraph Pass를 Worker Thread에 분배하고,
 각 Pass를 독립적인 CommandContext에서 병렬 Recording합니다.
 
-| Worker Count | Command Record |
-|---:|---:|
-| 1 | 52.19 ms |
-| 2 | 42.91 ms |
-| 4 | **36.88 ms** |
-| 8 | 37.72 ms |
-
-Worker 수를 1 → 4로 증가시키면서 Command Recording Time이 감소했습니다.
-
-반면 4 → 8 구간에서는 추가적인 성능 향상이 거의 나타나지 않았습니다.
-
-현재 RenderGraph는 5개의 Pass를 Pass 단위 Job으로 처리하기 때문에,
-Worker 수가 Pass 수를 초과하면 추가적인 병렬성을 확보하기 어렵습니다.
-
-따라서 현재 구조에서는 **4 Worker 이후 Command Recording 병렬화 효과가 포화되는 경향**을 확인했습니다.
+- 1 Worker: **52.19 ms**
+- 4 Worker: **36.88 ms**
+- 약 **29.3% 감소**
+- 현재 5 Pass 구조에서는 4 Worker 이후 병렬화 효과가 포화되는 경향을 확인했습니다.
 
 <details>
 <summary>Worker 1 / 2 / 4 / 8 screenshots</summary>
+
 <table>
 <tr>
 <td width="50%">Worker 1<img src="assets/readme/worker1.png"></td>
@@ -191,6 +161,7 @@ Worker 수가 Pass 수를 초과하면 추가적인 병렬성을 확보하기 �
 <td width="50%">Worker 8<img src="assets/readme/worker8.png"></td>
 </tr>
 </table>
+
 </details>
 
 ---
