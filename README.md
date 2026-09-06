@@ -1,7 +1,7 @@
 # DirectX 12 Renderer / Engine
 
 DirectX 12 기반의 Renderer / Engine 프로젝트입니다.  
-렌더링 기능 구현과 **RenderGraph, Multi-threaded Command Recording, FrameResource, UploadAllocator, Descriptor / GPU Resource Lifetime 관리**까지 엔진 내부 구조를 직접 구성했습니다.
+렌더링 기능과 **RenderGraph, Multi-threaded Command Recording, FrameResource, UploadAllocator, Descriptor / GPU Resource Lifetime 관리**등 DX12의 명시적 리소스 및 Command 관리 구조를 구현했습니다.
 
 ---
 
@@ -19,16 +19,12 @@ DirectX 12 기반의 Renderer / Engine 프로젝트입니다.
 
 ### Engine / Optimization
 - Scene / GameObject / Component
-- RenderGraph
+- RenderGraph (Topological Sort, Resource State / Berrier Management)
 - Multi-threaded Command Recording
-- FrameResource
-- UploadAllocator
-- DescriptorAllocator
-- Deferred Release Queue
-- Frustum Culling
-- Instancing
-- GPU Timestamp Profiler
-- ImGui Diagnostics
+- FrameResource / UploadAllocator
+- DescriptorAllocator / Deferred Release
+- Frustum Culling / Instancing
+- GPU Timestamp Profiler / ImGui Diagnostics
 
 ---
 
@@ -120,6 +116,8 @@ Tangent-space Normal Map을 TBN 행렬로 변환해 Geometry를 추가하지 않
 | Draw Calls | 410 | 11 |
 | Triangles | 309,230 | 309,230 |
 
+동일 Triangle 수를 유지하면서 Draw Calls 410 -> 11로 감소했습니다.
+
 <table>
 <tr>
 <td width="50%"><img src="assets/readme/instancing_off.png"></td>
@@ -131,7 +129,7 @@ Tangent-space Normal Map을 TBN 행렬로 변환해 Geometry를 추가하지 않
 
 ## Frustum Culling
 
-View Frustum 외부 객체를 제거해 동일 Scene에서 처리 Object / Triangle 수를 감소시켰습니다.
+View Frustum 외부 객체를 제외하여 처리 Object / Triangle 수를 감소시켰습니다.
 
 | Metric | OFF | ON |
 |---|---:|---:|
@@ -139,6 +137,8 @@ View Frustum 외부 객체를 제거해 동일 Scene에서 처리 Object / Trian
 | Culled Objects | 0 | 132 |
 | Triangles | 309,230 | 207,194 |
 | Draw Calls | 11 | 11 |
+
+132개 Object를 제외하고 Triangle 수를 309,230 -> 207,194로 감소시켰습니다.
 
 <table>
 <tr>
@@ -160,7 +160,7 @@ RenderGraph Pass를 Worker Thread에 분배하고 각 Pass를 독립적인 Comma
 | 4 | **207.397 ms** |
 | 8 | 280.187 ms |
 
-현재 Scene에서는 Worker 4에서 가장 낮은 Recording Time을 기록했고, Worker 8에서는 Thread / Synchronization Overhead로 성능이 다시 감소했습니다.
+Worker 4에서 가장 낮은 Recording Time을 기록했고, Worker 8에서는 Thread / Synchronization Overhead로 성능이 다시 감소했습니다.
 
 <details>
 <summary>Worker 1 / 2 / 4 / 8 screenshots</summary>
@@ -252,7 +252,7 @@ ImGui 기반 Diagnostics UI에서 다음 항목을 런타임에 확인할 수 �
 - Skybox
 
 **Showcase 핵심:**  
-Skinned Animation 결과를 Shadow Pass에도 동일하게 반영하여 Terrain 위 Dynamic Shadow가 애니메이션과 함께 갱신됩니다.
+Compute Skinning 결과를 Shadow Pass에도 동일하게 사용하여 애니메이션되는 Character의 Dynamic Shadow가 실시간으로 갱신됩니다.
 
 ---
 
